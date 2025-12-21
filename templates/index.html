@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutomaDrive Pro | IA para Talleres</title>
+    <link rel="icon" href="{{ url_for('static', filename='logo.jpg') }}" type="image/jpeg">
+    
+    <style>
+        :root {
+            --primary: #4ade80; 
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text: #f8fafc;
+            --accent: #334155;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            line-height: 1.6;
+            scroll-behavior: smooth;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 8%;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--accent);
+            position: sticky; top: 0; z-index: 1000;
+        }
+
+        .logo { font-size: 1.6rem; font-weight: 800; color: var(--primary); }
+        .logo span { color: white; }
+
+        /* Estilos del Chat */
+        .chat-demo {
+            max-width: 600px;
+            margin: 40px auto;
+            background: var(--card);
+            border-radius: 20px;
+            border: 1px solid var(--accent);
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            text-align: left;
+        }
+
+        .chat-header { background: var(--accent); padding: 15px; font-weight: bold; display: flex; align-items: center; }
+        .chat-header::before { content: ""; width: 10px; height: 10px; background: var(--primary); border-radius: 50%; margin-right: 10px; }
+
+        #chat-window { height: 350px; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; background: #0f172a; }
+        
+        .msg { padding: 12px 16px; border-radius: 15px; max-width: 80%; font-size: 0.95rem; }
+        .msg.bot { background: var(--accent); align-self: flex-start; border-bottom-left-radius: 2px; }
+        .msg.user { background: var(--primary); color: #062010; align-self: flex-end; border-bottom-right-radius: 2px; font-weight: 600; }
+
+        .chat-input-area { display: flex; padding: 15px; background: var(--card); border-top: 1px solid var(--accent); gap: 10px; }
+        .chat-input-area input { flex: 1; background: #0f172a; border: 1px solid var(--accent); padding: 12px; color: white; border-radius: 8px; outline: none; }
+        .chat-input-area button { background: var(--primary); color: #062010; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+
+        .hardware-img {
+            width: 100%; max-width: 600px; border-radius: 20px; margin-top: 50px;
+            border: 1px solid var(--primary); box-shadow: 0 0 30px rgba(74, 222, 128, 0.2);
+        }
+
+        .pricing { padding: 80px 8%; text-align: center; }
+        .price-card { background: var(--card); max-width: 400px; margin: 0 auto; padding: 40px; border-radius: 30px; border: 2px solid var(--primary); }
+
+        footer { padding: 40px; text-align: center; border-top: 1px solid var(--accent); color: #64748b; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo"><span>Automa</span>Drive Pro</div>
+        <nav style="display: flex; gap: 20px;">
+            <a href="#precios" style="color: #94a3b8; text-decoration: none;">Precios</a>
+            <a href="mailto:info.automadrivepro@gmail.com" style="color: #94a3b8; text-decoration: none;">Contacto</a>
+        </nav>
+    </header>
+
+    <section style="text-align: center; padding: 80px 8%;">
+        <h1>El motor de tu taller, <span style="color: var(--primary);">impulsado por IA</span></h1>
+        <p style="color: #94a3b8; max-width: 700px; margin: 0 auto 40px;">Gestiona citas y consultas técnicas por WhatsApp automáticamente 24/7.</p>
+
+        <div class="chat-demo">
+            <div class="chat-header">🤖 Asistente Virtual AutomaDrive</div>
+            <div id="chat-window">
+                <div class="msg bot">¡Hola! Soy la IA de AutomaDrive Pro. Pregúntame algo, por ejemplo: "¿Por qué sale humo negro del escape?"</div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" id="user-input" placeholder="Escribe tu duda técnica aquí...">
+                <button id="send-btn" onclick="sendToIA()">➤</button>
+            </div>
+        </div>
+
+        <img src="{{ url_for('static', filename='logo.jpg') }}" alt="Tecnología AutomaDrive Pro" class="hardware-img">
+    </section>
+
+    <section id="precios" class="pricing">
+        <div class="price-card">
+            <h2 style="color: var(--primary);">Suscripción Pro</h2>
+            <div style="font-size: 3.5rem; font-weight: 800; margin: 20px 0;">32€<span style="font-size: 1rem; color: #64748b;">/mes</span></div>
+            <p style="font-weight: bold; color: var(--primary);">IVA INCLUIDO</p>
+            
+            <script async src="https://js.stripe.com/v3/buy-button.js"></script>
+            <stripe-buy-button
+                buy-button-id="buy_btn_1SgWN93L9tn5sJrayCo0SzzX"
+                publishable-key="pk_live_51SgV1F3L9tn5sJrat7osrdOy9lKC7Y2S8nt1LW5MXzvIMkPQgDBJrP1y61y0KPZVoXOFGb4cqAwhZRQsQ7G743yT00M8rKQbiw"
+            ></stripe-buy-button>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2025 AutomaDrive Pro - info.automadrivepro@gmail.com</p>
+    </footer>
+
+    <script>
+        async function sendToIA() {
+            const input = document.getElementById('user-input');
+            const message = input.value.trim();
+            if (!message) return;
+
+            appendMessage('user', message);
+            input.value = '';
+
+            try {
+                // El fetch apunta a la ruta /ask que configuramos en app.py
+                const response = await fetch('/ask', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: message })
+                });
+
+                if (!response.ok) throw new Error('Error en la respuesta del servidor');
+
+                const data = await response.json();
+                appendMessage('bot', data.response);
+            } catch (error) {
+                console.error('Error:', error);
+                appendMessage('bot', 'Lo siento, no puedo conectar con mi cerebro en la Raspberry. Revisa si app.py está corriendo.');
+            }
+        }
+
+        function appendMessage(sender, text) {
+            const window = document.getElementById('chat-window');
+            const div = document.createElement('div');
+            div.className = `msg ${sender}`;
+            div.innerText = text;
+            window.appendChild(div);
+            window.scrollTop = window.scrollHeight;
+        }
+
+        document.getElementById('user-input').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') sendToIA();
+        });
+    </script>
+</body>
+</html>

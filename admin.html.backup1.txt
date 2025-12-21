@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutomaDrive Pro - Cloud SaaS</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --bg: #0b0e14; --card: #161b22; --accent: #00f2ff; --text: #e6edf3; --gold: #e3b341; }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; margin: 0; padding: 15px; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .status-badge { background: rgba(0, 242, 255, 0.1); color: var(--accent); padding: 8px 15px; border-radius: 20px; border: 1px solid var(--accent); font-size: 0.8em; font-weight: bold; }
+
+        .main-layout { display: grid; grid-template-columns: 380px 1fr 250px; gap: 15px; }
+
+        /* Actividad */
+        .activity-card { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid #30363d; height: 85vh; overflow-y: auto; }
+        .log-item { background: #1c2128; margin-bottom: 10px; padding: 15px; border-radius: 10px; cursor: pointer; border-left: 4px solid var(--accent); transition: 0.2s; }
+        .log-item:hover { background: #2d333b; transform: scale(1.02); }
+
+        /* Centro: Video + Mapa */
+        .center-col { display: flex; flex-direction: column; gap: 15px; }
+        .video-box { background: #000; border-radius: 12px; aspect-ratio: 16/9; overflow: hidden; border: 1px solid #30363d; }
+        .map-mini { height: 250px; border-radius: 12px; border: 1px solid #30363d; position: relative; }
+        .map-btn { position: absolute; bottom: 10px; right: 10px; background: var(--accent); color: #000; border: none; padding: 8px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.8em; }
+
+        /* Derecha: Publicidad y Recambios */
+        .side-col { display: flex; flex-direction: column; gap: 15px; }
+        .ad-box { background: linear-gradient(45deg, #1e2530, #161b22); padding: 15px; border-radius: 12px; border: 1px solid var(--gold); text-align: center; }
+        .spare-parts { background: #1c2128; padding: 15px; border-radius: 12px; border: 1px solid #30363d; }
+        .spare-item { font-size: 0.85em; margin-top: 10px; padding: 8px; background: rgba(255,255,255,0.05); border-radius: 5px; }
+
+        /* Modal */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); }
+        .modal-content { background: var(--card); margin: 5% auto; padding: 25px; border-radius: 15px; width: 450px; border: 1px solid var(--accent); }
+        input, textarea { width: 100%; background: #0d1117; border: 1px solid #30363d; color: white; padding: 10px; border-radius: 8px; margin-top: 5px; box-sizing: border-box; }
+        .btn-save { background: var(--accent); color: #000; border: none; padding: 15px; width: 100%; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 15px; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1><i class="fas fa-bolt" style="color: var(--gold);"></i> AutomaDrive Pro</h1>
+        <div class="status-badge"><i class="fas fa-circle"></i> SISTEMA SaaS CLOUD ONLINE</div>
+    </div>
+
+    <div class="main-layout">
+        <div class="activity-card">
+            <h3 style="margin-top:0"><i class="fas fa-tasks"></i> Actividad Taller</h3>
+            <div id="contenedor-logs">Cargando...</div>
+        </div>
+
+        <div class="center-col">
+            <div class="video-box">
+                <iframe width="100%" height="100%" src="https://www.youtube.com/embed/dQw4w9WgXcQ" frameborder="0" allowfullscreen></iframe>
+            </div>
+            <div class="map-mini">
+                <iframe id="mapa-iframe" width="100%" height="100%" frameborder="0" src="http://googleusercontent.com/maps.google.com/2"></iframe>
+                <button class="map-btn" onclick="ampliarMapa()"><i class="fas fa-expand"></i> AMPLIAR MAPA</button>
+            </div>
+        </div>
+
+        <div class="side-col">
+            <div class="ad-box">
+                <small style="color: var(--gold); font-weight: bold;">ESPACIO PUBLICITARIO</small>
+                <p style="font-size: 0.9em; margin: 10px 0;">¡Anuncia tu marca aquí!<br>Llega a cientos de talleres.</p>
+                <button style="background: var(--gold); border:none; padding: 5px 10px; border-radius: 4px; font-weight: bold; cursor:pointer;">INFO</button>
+            </div>
+
+            <div class="spare-parts">
+                <h4 style="margin:0; color: #ff4b4b;"><i class="fas fa-tools"></i> Recambios 24h</h4>
+                <div id="tiendas-24h">
+                    <div class="spare-item">🛠️ Repuestos Express - 24/7</div>
+                    <div class="spare-item">📦 Almacén Central - Emergencias</div>
+                </div>
+                <button onclick="buscarTiendas()" style="width:100%; margin-top:10px; background:transparent; color: var(--accent); border: 1px solid var(--accent); cursor:pointer; padding: 5px; border-radius: 5px;">Buscar cerca</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="miModal" class="modal">
+        <div class="modal-content">
+            <span style="float:right; cursor:pointer;" onclick="cerrarModal()">×</span>
+            <h2 style="color:var(--accent)">Ficha Vehículo</h2>
+            <form id="form-cliente">
+                <label>Matrícula</label><input type="text" id="matricula" readonly>
+                <label>Cliente</label><input type="text" id="propietario">
+                <label>Marca/Modelo</label><input type="text" id="modelo">
+                <label>WhatsApp</label><input type="text" id="telefono">
+                <label>Kilómetros</label><input type="text" id="km">
+                <label>Notas Reparación</label><textarea id="notas" rows="3"></textarea>
+                <button type="button" class="btn-save" onclick="guardarFicha()">GUARDAR CAMBIOS</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        async function cargarLogs() {
+            const res = await fetch('/logs');
+            const data = await res.json();
+            const contenedor = document.getElementById('contenedor-logs');
+            contenedor.innerHTML = '';
+            data.logs.forEach(log => {
+                const div = document.createElement('div');
+                div.className = 'log-item';
+                div.onclick = () => cargarFicha(log[1]);
+                div.innerHTML = `<strong>${log[1]}</strong><br><span>${log[3] || 'Registrar...'}</span><br><small style="opacity:0.5">${log[0]}</small>`;
+                contenedor.appendChild(div);
+            });
+        }
+
+        function ampliarMapa() {
+            window.open("http://googleusercontent.com/maps.google.com/3", "_blank");
+        }
+
+        async function cargarFicha(m) {
+            const res = await fetch(`/datos_cliente/${m}`);
+            const data = await res.json();
+            document.getElementById('matricula').value = m;
+            document.getElementById('propietario').value = data.propietario || '';
+            document.getElementById('modelo').value = data.modelo || '';
+            document.getElementById('telefono').value = data.telefono || '';
+            document.getElementById('km').value = data.km || '';
+            document.getElementById('notas').value = data.notas || '';
+            document.getElementById('miModal').style.display = "block";
+        }
+
+        async function guardarFicha() {
+            const payload = {
+                matricula: document.getElementById('matricula').value,
+                propietario: document.getElementById('propietario').value,
+                modelo: document.getElementById('modelo').value,
+                telefono: document.getElementById('telefono').value,
+                km: document.getElementById('km').value,
+                notas: document.getElementById('notas').value,
+                proxima_itv: ""
+            };
+            await fetch('/guardar_cliente', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+            alert("Guardado");
+            document.getElementById('miModal').style.display = "none";
+            cargarLogs();
+        }
+
+        function buscarTiendas() { alert("Buscando proveedores 24h en tu zona..."); }
+        function cerrarModal() { document.getElementById('miModal').style.display = "none"; }
+
+        setInterval(cargarLogs, 10000);
+        cargarLogs();
+    </script>
+</body>
+</html>

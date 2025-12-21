@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutomaDrive Pro | Gestión</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        :root { --neon: #00ffcc; --bg: #0b0f19; --card: #161e2d; --blue: #00d4ff; --purple: #8b5cf6; --green: #10b981; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; padding: 15px; margin: 0; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .server-status { background: rgba(16, 185, 129, 0.1); color: var(--green); padding: 5px 12px; border-radius: 20px; border: 1px solid var(--green); font-size: 0.75rem; font-weight: bold; display: flex; align-items: center; gap: 6px; }
+        .dot { width: 8px; height: 8px; background: var(--green); border-radius: 50%; box-shadow: 0 0 8px var(--green); animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+
+        .card { background: var(--card); padding: 12px; border-radius: 12px; margin-bottom: 10px; border-left: 4px solid var(--neon); cursor: pointer; border-bottom: 1px solid #334155; }
+        .plate { font-weight: bold; font-size: 1.1rem; color: var(--neon); }
+
+        #formulario { background: var(--card); padding: 20px; border-radius: 15px; border: 1px solid var(--neon); display: none; margin-top: 10px; }
+        label { display: block; margin-top: 10px; font-size: 0.75rem; color: #8892b0; font-weight: bold; text-transform: uppercase; }
+        input, textarea { width: 100%; padding: 12px; margin: 5px 0; background: #0b0f19; border: 1px solid #334155; color: white; border-radius: 8px; box-sizing: border-box; }
+        
+        .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; }
+        .btn-action { padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.8rem; }
+        .btn-ready { background: var(--blue); color: #000; }
+        .btn-itv { background: var(--purple); color: white; }
+        .btn-save { background: var(--neon); color: black; width: 100%; padding: 15px; font-weight: bold; border-radius: 8px; border: none; margin-top: 10px; cursor: pointer; }
+        #map { height: 180px; width: 100%; border-radius: 10px; margin-top: 10px; border: 1px solid #334155; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2 style="color:var(--neon); margin:0;">⚡ AutomaDrive Pro</h2>
+        <div class="server-status">
+            <div class="dot"></div>
+            SISTEMA ONLINE
+        </div>
+    </div>
+
+    <div id="logs-container">Cargando registros...</div>
+
+    <div id="formulario">
+        <h3 id="form-titulo" style="margin:0; color:var(--neon)">Ficha</h3>
+        <input type="hidden" id="f-matricula">
+        <div class="grid-2">
+            <div><label>👤 CLIENTE:</label><input type="text" id="f-propietario"></div>
+            <div><label>📱 WHATSAPP:</label><input type="text" id="f-telefono"></div>
+        </div>
+        <div class="grid-2">
+            <div><label>🚘 MODELO:</label><input type="text" id="f-modelo"></div>
+            <div><label>🛣️ KMs:</label><input type="number" id="f-km"></div>
+        </div>
+        <div class="grid-2">
+            <div><label>📅 ITV ACTUAL:</label><input type="date" id="f-itv-actual" onchange="autoITV()"></div>
+            <div><label style="color:var(--neon)">🎯 PRÓXIMA REVISIÓN:</label><input type="date" id="f-itv"></div>
+        </div>
+        <div class="btn-group">
+            <button class="btn-action btn-ready" onclick="avisarListo()">📢 COCHE LISTO</button>
+            <button class="btn-action btn-itv" onclick="avisarITV()">🗓️ AVISO ITV+MAPA</button>
+        </div>
+        <label>📍 ESTACIONES ITV CERCANAS:</label>
+        <div id="map"></div>
+        <textarea id="f-notas" rows="3" style="margin-top:10px;" placeholder="Notas técnicas..."></textarea>
+        <button class="btn-save" onclick="guardarFicha()">💾 GUARDAR CAMBIOS</button>
+        <button onclick="document.getElementById('formulario').style.display='none'" style="background:none; border:none; color:#ef4444; width:100%; margin-top:10px; cursor:pointer; font-weight:bold;">✖ CANCELAR</button>
+    </div>
+
+    <script>
+        const API = window.location.origin;
+        let map;
+
+        function autoITV() {
+            let f = document.getElementById('f-itv-actual').value;
+            if(f) {
+                let d = new Date(f); d.setFullYear(d.getFullYear() + 1);
+                document.getElementById('f-itv').value = d.toISOString().split('T')[0];
+            }
+        }
+
+        async function cargarLogs() {
+            try {
+                const r = await fetch(`${API}/logs`);
+                const data = await r.json();
+                document.getElementById('logs-container').innerHTML = data.logs.map(l => `
+                    <div class="card" onclick="abrirFicha('${l[1]}')">
+                        <div class="log-row"><span class="plate">${l[1]}</span> <span style="font-size:0.7rem; color:#8892b0;">${l[0]}</span></div>
+                        <div style="font-size:0.8rem; color:#fff; margin-top:5px;">${l[2] || '⚠ Nuevo'} - ${l[3] || 'Toca para editar'}</div>
+                    </div>`).join('');
+            } catch (e) {}
+        }
+
+        async function abrirFicha(m) {
+            document.getElementById('f-matricula').value = m;
+            document.getElementById('form-titulo').innerText = "Vehículo: " + m;
+            document.getElementById('formulario').style.display = 'block';
+            try {
+                const r = await fetch(`${API}/datos_cliente/${m}`);
+                const res = await r.json();
+                if(res.encontrado) {
+                    document.getElementById('f-propietario').value = res.propietario || '';
+                    document.getElementById('f-telefono').value = res.telefono || '';
+                    document.getElementById('f-modelo').value = res.modelo || '';
+                    document.getElementById('f-km').value = res.km || '';
+                    document.getElementById('f-itv').value = res.proxima_itv || '';
+                    document.getElementById('f-notas').value = res.notas || '';
+                } else {
+                    document.querySelectorAll('#formulario input:not([type="hidden"])').forEach(i => i.value = '');
+                    document.getElementById('f-notas').value = '';
+                }
+            } catch (e) {}
+            window.scrollTo({top: document.body.scrollHeight, behavior:'smooth'});
+            initMap();
+        }
+
+        async function avisarListo() {
+            const data = { telefono: document.getElementById('f-telefono').value, matricula: document.getElementById('f-matricula').value };
+            await fetch(`${API}/avisar_terminado`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
+            alert("✅ Aviso enviado a Telegram");
+        }
+
+        async function avisarITV() {
+            const data = { telefono: document.getElementById('f-telefono').value, matricula: document.getElementById('f-matricula').value, propietario: document.getElementById('f-propietario').value, fecha_itv: document.getElementById('f-itv').value };
+            await fetch(`${API}/avisar_proxima_itv`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
+            alert("✅ Recordatorio enviado a Telegram");
+        }
+
+        async function guardarFicha() {
+            const data = { matricula: document.getElementById('f-matricula').value, propietario: document.getElementById('f-propietario').value, telefono: document.getElementById('f-telefono').value, modelo: document.getElementById('f-modelo').value, km: document.getElementById('f-km').value, proxima_itv: document.getElementById('f-itv').value, notas: document.getElementById('f-notas').value, aceite: "Estándar" };
+            await fetch(`${API}/guardar_cliente`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
+            alert("✅ Guardado"); document.getElementById('formulario').style.display='none'; cargarLogs();
+        }
+
+        function initMap() {
+            if (map) map.remove();
+            map = L.map('map').setView([40.4168, -3.7038], 12);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        }
+
+        setInterval(cargarLogs, 4000);
+        cargarLogs();
+    </script>
+</body>
+</html>
