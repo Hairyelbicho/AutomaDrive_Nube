@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutomaDrive Pro | Asistente Técnico IA</title>
+    <style>
+        :root {
+            --primary: #4ade80;
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text: #f1f5f9;
+            --accent: #334155;
+            --neon: 0 0 20px rgba(74, 222, 128, 0.4);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: var(--text);
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            min-height: 100vh;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 5%;
+            background: rgba(0,0,0,0.8);
+            border-bottom: 2px solid var(--primary);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: var(--primary);
+            text-shadow: 0 0 10px rgba(74, 222, 128, 0.5);
+        }
+
+        .nav-links { display: flex; gap: 15px; }
+
+        .container {
+            display: grid;
+            grid-template-columns: 420px 1fr 380px;
+            gap: 25px;
+            padding: 40px;
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+
+        .panel {
+            background: var(--card);
+            border: 1px solid var(--accent);
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+        }
+
+        .panel-title { color: var(--primary); font-size: 1.4rem; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; }
+        .subtitle { color: #94a3b8; font-size: 0.9rem; margin-bottom: 20px; }
+
+        #chat-box {
+            background: #0a1120;
+            height: 400px;
+            overflow-y: auto;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border: 1px solid #1e293b;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message { padding: 12px 16px; border-radius: 10px; margin-bottom: 10px; max-width: 85%; line-height: 1.5; }
+        .bot-msg { background: #1e293b; align-self: flex-start; border-left: 3px solid var(--primary); }
+        .user-msg { background: var(--primary); color: #000; font-weight: 600; align-self: flex-end; }
+
+        .btn-secondary { background: var(--accent); color: white; padding: 10px 15px; border-radius: 8px; text-decoration: none; font-size: 0.8rem; font-weight: bold; cursor: pointer; border: none; }
+
+        .btn-capture {
+            width: 100%; background: #10b981; color: white; padding: 15px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; font-weight: bold; border: none; margin-bottom: 15px;
+        }
+
+        #input-camera { display: none; }
+        .input-area { display: flex; gap: 10px; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 10px; }
+
+        input[type="text"] { flex: 1; background: #0f172a; border: 1px solid var(--accent); color: white; padding: 12px; border-radius: 8px; }
+
+        .btn-send { background: var(--primary); color: #000; border: none; padding: 10px 25px; border-radius: 8px; font-weight: 900; cursor: pointer; }
+
+        .map-frame { width: 100%; height: 550px; border-radius: 12px; border: 1px solid var(--accent); }
+
+        footer { text-align: center; padding: 30px; color: #64748b; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo">AUTOMA<span style="color:white;">DRIVE</span> PRO</div>
+    <div class="nav-links">
+        <button onclick="window.location.href='/api/actividad'" class="btn-secondary">📊 ACTIVIDAD</button>
+        <button onclick="window.location.href='/'" class="btn-secondary">🏠 PANEL PRINCIPAL</button>
+    </div>
+</header>
+
+<div class="container">
+    <div class="panel">
+        <h2 class="panel-title">🤖 ASISTENTE IA</h2>
+        <p class="subtitle">Consulta técnica y diagnóstico</p>
+
+        <div id="chat-box">
+            <div class="message bot-msg">🔧 ¡Hola! Escribe tu consulta o captura una avería para analizarla.</div>
+        </div>
+
+        <label for="input-camera" class="btn-capture">📷 CAPTURAR AVERÍA</label>
+        <input type="file" id="input-camera" accept="image/*" capture="environment">
+
+        <div class="input-area">
+            <input type="text" id="user-input" placeholder="Pregunta algo sobre mecánica...">
+            <button class="btn-send" id="send-btn" type="button">GO</button>
+        </div>
+    </div>
+
+    <div class="panel">
+        <h2 class="panel-title">📍 GEOLOCALIZACIÓN</h2>
+        <p class="subtitle">Servicios en tiempo real</p>
+        <iframe class="map-frame" src="https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d12150.31!2d-3.70!3d40.41!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1ses!2ses!4v1700000000000"></iframe>
+    </div>
+
+    <div class="panel" style="text-align:center;">
+        <h2 style="color:var(--primary); margin-bottom:20px;">PLAN PRO</h2>
+        <div style="font-size:3rem; font-weight:900; margin-bottom:20px;">32€<span style="font-size:1rem;">/mes</span></div>
+        <stripe-buy-button buy-button-id="buy_btn_1SgWN93L9tn5sJrayCo0SzzX" publishable-key="pk_live_51SgV1F3L9tn5sJrat7osrdOy9lKC7Y2S8nt1LW5MXzvIMkPQgDBJrP1y61y0KPZVoXOFGb4cqAwhZRQsQ7G743yT00M8rKQbiw"></stripe-buy-button>
+    </div>
+</div>
+
+<footer>© 2025 AutomaDrive Pro</footer>
+
+<script>
+    const $ = (id) => document.getElementById(id);
+
+    function addMessage(type, text) {
+        const chat = $('chat-box');
+        const m = document.createElement('div');
+        m.className = `message ${type === 'user' ? 'user-msg' : 'bot-msg'}`;
+        m.textContent = text;
+        chat.appendChild(m);
+        chat.scrollTop = chat.scrollHeight;
+        return m;
+    }
+
+    async function sendMessage() {
+        const input = $('user-input');
+        const btn = $('send-btn');
+        const text = (input.value || '').trim();
+        
+        if (!text) return;
+
+        addMessage('user', text);
+        input.value = '';
+        const typing = addMessage('bot', '⌛ Consultando experto...');
+
+        btn.disabled = true;
+
+        try {
+            // Sincronizado con el endpoint de tu app.py
+            const res = await fetch('/api/consulta-ia', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ pregunta: text })
+            });
+
+            const data = await res.json();
+            typing.remove();
+
+            if (!res.ok) {
+                addMessage('bot', `❌ Error del sistema: ${data.error || 'Inténtalo de nuevo'}`);
+            } else {
+                // Sincronizado con la clave 'respuesta' que envía tu backend
+                addMessage('bot', data.respuesta || 'No he podido obtener una solución clara.');
+            }
+        } catch (e) {
+            typing.textContent = '❌ Sin conexión con la Raspberry.';
+        } finally {
+            btn.disabled = false;
+            input.focus();
+        }
+    }
+
+    async function uploadImageFile(file) {
+        if (!file) return;
+
+        addMessage('user', '📸 Analizando imagen de avería...');
+        const typing = addMessage('bot', '⌛ Procesando OCR/Visión...');
+
+        const formData = new FormData();
+        formData.append('image', file);
+
+        try {
+            // Sincronizado con tu lógica de subida
+            const res = await fetch('/api/upload-ocr', { method: 'POST', body: formData });
+            const data = await res.json();
+            typing.remove();
+
+            if (!res.ok) {
+                addMessage('bot', `❌ Error: ${data.error || 'No se pudo leer la imagen'}`);
+            } else {
+                addMessage('bot', '✅ Análisis completado: ' + (data.result || 'Imagen registrada en el historial.'));
+            }
+        } catch (e) {
+            typing.textContent = '❌ Error de comunicación de imagen.';
+        } finally {
+            $('input-camera').value = '';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        $('send-btn')?.addEventListener('click', sendMessage);
+
+        $('user-input')?.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        $('input-camera')?.addEventListener('change', (e) => {
+            const file = e.target.files && e.target.files[0];
+            uploadImageFile(file);
+        });
+    });
+</script>
+<script async src="https://js.stripe.com/v3/buy-button.js"></script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+nohup: ignoring input
+2025-12-29 22:52:18,022 - INFO - 🚀 SISTEMA AUTOMADRIVE PRO ACTIVADO EN MODO SaaS
+ * Serving Flask app 'app'
+ * Debug mode: off
+Address already in use
+Port 5000 is in use by another program. Either identify and stop that program, or start the server with a different port.

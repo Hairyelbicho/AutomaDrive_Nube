@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Técnico | AutomaDrive Pro</title>
+    <link rel="icon" href="{{ url_for('static', filename='ia-logo.png') }}" type="image/png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { 
+            --primary: #4ade80; 
+            --bg: #0b0e14; 
+            --card: #161b22; 
+            --text: #e6edf3; 
+            --btn-bg: #21262d; 
+            --gold: #e3b341; 
+            --accent: #00f2ff;
+        }
+        /* Mantenemos tu CSS original intacto */
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; padding: 15px; display: flex; flex-direction: column; min-height: 100vh; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--btn-bg); padding-bottom: 10px; }
+        .logo-admin { font-weight: 800; color: var(--primary); font-size: 1.5rem; display: flex; align-items: center; gap: 10px; }
+        .nav-buttons { display: flex; gap: 10px; align-items: center; }
+        .master-clock { background: #000; color: var(--primary); padding: 8px 15px; border-radius: 8px; border: 1px solid var(--primary); font-family: monospace; font-size: 1.2rem; min-width: 100px; text-align: center;}
+        .main-layout { display: grid; grid-template-columns: 350px 1fr 280px; gap: 15px; flex: 1; }
+        .btn-nav { background: var(--btn-bg); border: 1px solid #30363d; color: white; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 8px; transition: 0.3s; }
+        .btn-nav:hover { background: #30363d; }
+        .search-widget, .camera-section, .ai-assistant, .ad-box, .internal-comm { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid #30363d; margin-bottom: 15px; }
+        .video-box, .map-box { width: 100%; height: 350px; background: #000; border-radius: 12px; border: 1px solid #30363d; margin-bottom: 15px; overflow: hidden; }
+        .modal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); backdrop-filter: blur(5px); }
+        .modal-content { background: var(--card); margin: 5% auto; padding: 25px; border-radius: 15px; width: 450px; border: 1px solid var(--primary); box-shadow: 0 0 20px rgba(74, 222, 128, 0.2); }
+        input, textarea { width: 100%; background: #0d1117; border: 1px solid #30363d; color: white; padding: 12px; border-radius: 8px; margin-bottom: 15px; box-sizing: border-box; outline: none; }
+        input:focus { border-color: var(--primary); }
+        footer { margin-top: auto; padding: 15px; border-top: 1px solid #333; text-align: center; font-size: 0.75rem; color: #666; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="logo-admin">
+            <img src="{{ url_for('static', filename='ia-logo.png') }}" style="width:30px;">
+            <div><span>Automa</span>Drive Pro <small style="display:block; font-size: 0.4em; color: var(--gold);">PANEL DE CONTROL</small></div>
+        </div>
+        <div class="nav-buttons">
+            <button class="btn-nav" onclick="toggleActividad()"><i class="fas fa-history"></i> ACTIVIDAD</button>
+            <button class="btn-nav" onclick="nuevaFicha()"><i class="fas fa-plus"></i> NUEVO INGRESO</button>
+            <div class="master-clock" id="reloj-maestro">00:00:00</div>
+        </div>
+    </div>
+
+    <div class="main-layout">
+        <div class="left-col">
+            <div class="search-widget" style="background:white; color:#333;">
+                <div style="font-size:0.7em; font-weight:bold; margin-bottom:5px;">BUSCAR EXPEDIENTE</div>
+                <div style="display:flex; border:2px solid #000; border-radius:8px; overflow:hidden;">
+                    <div style="background:#003366; color:white; padding:10px; font-weight:bold;">E</div>
+                    <input type="text" id="widget-search" placeholder="0000 BBB" style="margin:0; border:none; color:#000; background:#fff; text-transform:uppercase; font-weight:bold;">
+                    <button onclick="buscarDesdeWidget()" style="background:#000; color:var(--primary); border:none; padding:10px; cursor:pointer;">GO</button>
+                </div>
+            </div>
+
+            <div class="camera-section">
+                <button class="btn-nav" style="width:100%; background: var(--primary); color: #000; justify-content:center;" onclick="document.getElementById('camera-input').click()">
+                    <i class="fas fa-camera"></i> CAPTURAR AVERÍA
+                </button>
+                <input type="file" id="camera-input" accept="image/*" capture="environment" style="display:none">
+            </div>
+
+            <div class="ai-assistant">
+                <div style="color:var(--primary); font-weight:bold; margin-bottom:10px;"><i class="fas fa-robot"></i> CONSULTA TÉCNICA</div>
+                <div id="ai-chat-admin" style="height:100px; font-size:0.8rem; color:#4ade80; overflow-y:auto; margin-bottom:10px;">Sistema IA listo...</div>
+                <input type="text" id="ai-admin-input" placeholder="Pregunta algo..." style="margin:0;">
+            </div>
+        </div>
+
+        <div class="center-col">
+            <div class="video-box">
+                <iframe width="100%" height="100%" src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&mute=1" frameborder="0"></iframe>
+            </div>
+            <div class="map-box">
+                <iframe width="100%" height="100%" frameborder="0" src="https://maps.google.com/maps?q=taller&output=embed"></iframe>
+            </div>
+        </div>
+
+        <div class="side-col">
+            <div class="ad-box">
+                <i class="fas fa-gas-pump" style="color:var(--gold);"></i> <b>CASTROL PRO</b>
+                <button style="width:100%; margin-top:10px; background:var(--gold); border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;">PEDIDO RÁPIDO</button>
+            </div>
+            <div class="internal-comm" style="border-color:var(--accent);">
+                <h4 style="color:var(--accent); margin-top:0;"><i class="fas fa-truck"></i> PROVEEDORES 24/7</h4>
+                <button onclick="window.open('https://www.distriauto.es')" style="width:100%; background:#fff; color:#000; border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer; margin-bottom:10px;">DISTRIAUTO</button>
+                <button onclick="window.open('https://www.autodoc.es')" style="width:100%; background:#ffdb00; color:#000; border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;">AUTODOC</button>
+            </div>
+            <div class="internal-comm">
+                <h4 style="color:var(--primary); margin-top:0;"><i class="fas fa-comments"></i> COMUNICACIÓN</h4>
+                <button style="width:100%; background:#0088cc; color:white; border:none; padding:10px; border-radius:8px; margin-bottom:10px;"><i class="fab fa-telegram-plane"></i> TELEGRAM</button>
+                <button style="width:100%; background:#28a745; color:white; border:none; padding:10px; border-radius:8px;"><i class="fas fa-video"></i> VIDEO FOSO</button>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        AutomaDrive Pro © 2025 | Soporte: <span id="email-safe"></span> | ID: {{ id_dispositivo or 'RASP-PRO-01' }}
+    </footer>
+
+    <div id="miModal" class="modal">
+        <div class="modal-content">
+            <h2 style="color:var(--primary); margin-top:0;">EXPEDIENTE TÉCNICO</h2>
+            <label>MATRÍCULA</label>
+            <input type="text" id="matricula" placeholder="1234ABC" style="text-transform:uppercase; font-weight:bold;">
+            <label>CLIENTE</label>
+            <input type="text" id="propietario" placeholder="Nombre completo">
+            <label>WHATSAPP</label>
+            <input type="text" id="telefono" placeholder="+34 600000000">
+            <label>NOTAS</label>
+            <textarea id="notes" rows="4" placeholder="Diagnóstico inicial..."></textarea>
+            <div style="display:flex; gap:10px;">
+                <button onclick="cerrarModal()" style="background:#e74c3c; color:white; border:none; padding:12px; border-radius:8px; flex:1; cursor:pointer; font-weight:bold;">CANCELAR</button>
+                <button id="btn-guardar" onclick="guardarFicha()" style="background:var(--primary); color:#000; border:none; padding:12px; border-radius:8px; flex:2; cursor:pointer; font-weight:bold;">
+                    <i class="fas fa-save"></i> GUARDAR Y AVISAR
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 1. Reloj Maestro Funcional
+        function actualizarReloj() {
+            const ahora = new Date();
+            const tiempo = ahora.toLocaleTimeString('es-ES', { hour12: false });
+            document.getElementById('reloj-maestro').textContent = tiempo;
+        }
+        setInterval(actualizarReloj, 1000);
+        actualizarReloj();
+
+        // 2. Email dinámico (Protección contra bots)
+        document.getElementById('email-safe').innerHTML = '<a href="mailto:info.automadrivepro@gmail.com" style="color:#666; text-decoration:none;">info.automadrivepro@gmail.com</a>';
+
+        // 3. Funciones de Interfaz
+        function nuevaFicha() { document.getElementById('miModal').style.display = 'block'; }
+        function cerrarModal() { document.getElementById('miModal').style.display = 'none'; }
+
+        // 4. Lógica de Guardado Optimizada
+        async function guardarFicha() {
+            const btn = document.getElementById('btn-guardar');
+            const data = {
+                matricula: document.getElementById('matricula').value.trim().toUpperCase(),
+                cliente: document.getElementById('propietario').value.trim(),
+                whatsapp: document.getElementById('telefono').value.trim(),
+                notas: document.getElementById('notes').value.trim()
+            };
+
+            if(!data.matricula || data.matricula.length < 4) {
+                alert("⚠️ Por favor, introduce una matrícula válida.");
+                return;
+            }
+
+            // Feedback visual
+            btn.disabled = true;
+            btn.style.background = "#888";
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> PROCESANDO...';
+
+            try {
+                const response = await fetch('/guardar_cliente', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    btn.style.background = "#2ecc71";
+                    btn.innerHTML = '✅ ¡ÉXITO!';
+                    setTimeout(() => {
+                        cerrarModal();
+                        location.reload();
+                    }, 1000);
+                } else {
+                    throw new Error();
+                }
+            } catch (e) {
+                alert("❌ ERROR: El servidor VPS o la Raspberry no responden.");
+                btn.disabled = false;
+                btn.style.background = "var(--primary)";
+                btn.innerHTML = '<i class="fas fa-save"></i> REINTENTAR GUARDAR';
+            }
+        }
+
+        // Enter para guardar (excepto en notas)
+        document.getElementById('miModal').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && e.target.id !== 'notes') {
+                guardarFicha();
+            }
+        });
+    </script>
+</body>
+</html>

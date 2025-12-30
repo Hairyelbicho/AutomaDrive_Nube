@@ -1,0 +1,264 @@
+"""
+AutomaDrive Pro - Backend Flask Corregido
+Sistema Inteligente de Gestión de Taller con IA y Radio Control
+"""
+
+from flask import Flask, render_template, request, jsonify, send_from_directory
+from flask_cors import CORS
+import os
+import json
+import logging
+from datetime import datetime
+import asyncio
+import aiohttp
+import openai
+from pathlib import Path
+import uuid
+
+# Configuración de logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+app = Flask(__name__)
+CORS(app)
+
+# Directorios mejorados
+BASE_DIR = Path(__file__).parent
+DATA_DIR = BASE_DIR / "data"
+DATA_DIR.mkdir(exist_ok=True)
+STATIC_DIR = BASE_DIR / "static"
+STATIC_DIR.mkdir(exist_ok=True)
+# Carpeta para las grabaciones de la Caja Negra
+RECORDINGS_DIR = DATA_DIR / "recordings"
+RECORDINGS_DIR.mkdir(exist_ok=True)
+
+# Archivos de datos
+CONFIG_FILE = DATA_DIR / "config.json"
+FICHAS_FILE = DATA_DIR / "fichas.json"
+ACTIVIDAD_FILE = DATA_DIR / "actividad.json"
+
+# --- FUNCIONES DE UTILIDAD ---
+
+def cargar_config():
+    if CONFIG_FILE.exists():
+        try:
+            with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except:
+            return {}
+    return {}
+
+def guardar_config(config):
+    with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
+        json.dump(config, f, indent=2, ensure_ascii=False)
+
+def cargar_fichas():
+    if FICHAS_FILE.exists():
+        try:
+            with open(FICHAS_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except:
+            return []
+    return []
+
+def guardar_ficha(ficha):
+    fichas = cargar_fichas()
+    ficha['id'] = len(fichas) + 1
+    ficha['fecha_creacion'] = datetime.now().isoformat()
+    ficha['estado'] = 'En espera'
+    fichas.append(ficha)
+    with open(FICHAS_FILE, 'w', encoding='utf-8') as f:
+        json.dump(fichas, f, indent=2, ensure_ascii=False)
+    registrar_actividad('Nueva Ficha', f"Ficha creada: {ficha['matricula']} - {ficha.get('cliente', 'N/A')}")
+    return ficha
+
+def registrar_actividad(tipo, descripcion):
+    actividades = []
+    if ACTIVIDAD_FILE.exists():
+        try:
+            with open(ACTIVIDAD_FILE, 'r', encoding='utf-8') as f:
+                actividades = json.load(f)
+        except:
+            pass
+    
+    actividades.insert(0, {
+        'tipo': tipo,
+        'descripcion': descripcion,
+        'fecha': datetime.now().isoformat()
+    })
+    actividades = actividades[:100]
+    with open(ACTIVIDAD_FILE, 'w', encoding='utf-8') as f:
+        json.dump(actividades, f, indent=2, ensure_ascii=False)
+
+# --- SERVICIO IA MEJORADO ---
+
+class ServicioIA:
+    def __init__(self):
+        self.openai_client = None
+    
+    def inicializar(self, api_key=None):
+        if api_key:
+            try:
+                self.openai_client = openai.OpenAI(api_key=api_key)
+                logger.info("Cliente OpenAI inicializado")
+            except Exception as e:
+                logger.error(f"Error inicializando OpenAI: {e}")
+
+    async def consultar(self, pregunta):
+        config = cargar_config()
+        api_key = config.get('openai_key')
+        
+        if api_key and self.openai_client is None:
+            self.inicializar(api_key)
+        
+        if self.openai_client:
+            try:
+                response = self.openai_client.chat.completions.create(
+                    model="gpt-4",
+                    messages=[
+                        {"role": "system", "content": "Eres un experto mecánico. Responde técnico y breve."},
+                        {"role": "user", "content": pregunta}
+                    ],
+                    temperature=0.7,
+                    max_tokens=500
+                )
+                return response.choices[0].message.content
+            except Exception as e:
+                return f"Error consultando IA: {str(e)}"
+        return "Respuesta local: Revisa niveles de aceite y códigos OBD2."
+
+servicio_ia = ServicioIA()
+
+# --- RUTAS FLASK ---
+
+@app.route('/')
+def index():
+    id_dispositivo = os.environ.get('DEVICE_ID', 'RASP-PRO-01')
+    return render_template('admin.html', id_dispositivo=id_dispositivo)
+
+@app.route('/api/health')
+def health():
+    return jsonify({"status": "ok", "timestamp": datetime.now().isoformat()})
+
+@app.route('/api/config', methods=['GET', 'POST'])
+def handle_config():
+    if request.method == 'POST':
+        config = request.json
+        guardar_config(config)
+        if config.get('openai_key'):
+            servicio_ia.inicializar(config['openai_key'])
+        registrar_actividad('Configuración', 'Ajustes del taller actualizados')
+        return jsonify({"status": "ok"})
+    return jsonify(cargar_config())
+
+@app.route('/api/consulta-ia', methods=['POST'])
+def consulta_ia():
+    data = request.json
+    pregunta = data.get('pregunta', '')
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    respuesta = loop.run_until_complete(servicio_ia.consultar(pregunta))
+    loop.close()
+    registrar_actividad('Consulta IA', f"Pregunta: {pregunta[:30]}...")
+    return jsonify({"respuesta": respuesta})
+
+@app.route('/guardar_cliente', methods=['POST'])
+def guardar_cliente():
+    try:
+        data = request.json
+        ficha = {
+            'matricula': data.get('matricula', '').upper(),
+            'cliente': data.get('cliente', ''),
+            'whatsapp': data.get('whatsapp', ''),
+            'notas': data.get('notas', '')
+        }
+        ficha_guardada = guardar_ficha(ficha)
+        
+        # Envío asíncrono a Telegram
+        config = cargar_config()
+        if config.get('tg_token') and config.get('tg_chatid'):
+            # En Flask, para simplificar usamos una llamada directa en lugar de create_task si no hay loop corriendo
+            asyncio.run(enviar_telegram(config['tg_token'], config['tg_chatid'], 
+                f"🚗 <b>Nuevo Ingreso:</b> {ficha['matricula']}\n👤 <b>Cliente:</b> {ficha['cliente']}"))
+        
+        return jsonify({"status": "ok", "ficha": ficha_guardada})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# --- NUEVA RUTA: CAJA NEGRA (SUBIR GRABACIÓN) ---
+@app.route('/api/upload-recording', methods=['POST'])
+def upload_recording():
+    if 'audio' not in request.files:
+        return jsonify({"error": "No audio file"}), 400
+    
+    file = request.files['audio']
+    filename = f"REC_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:4]}.webm"
+    file.save(RECORDINGS_DIR / filename)
+    
+    registrar_actividad('Seguridad', f"Nueva grabación de voz guardada: {filename}")
+    return jsonify({"status": "ok", "filename": filename})
+
+@app.route('/video-foso')
+def video_foso():
+    config = cargar_config()
+    video_url = config.get('video_foso_url', '')
+    
+    # Corregido: Uso de f-string y llaves para evitar errores de renderizado
+    html = f"""
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <title>Video Foso - AutomaDrive</title>
+        <style>
+            body {{ background: #0b0e14; color: white; font-family: sans-serif; text-align: center; padding: 20px; }}
+            iframe {{ width: 100%; height: 500px; border: 2px solid #4ade80; border-radius: 10px; }}
+            .btn {{ background: #4ade80; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; }}
+        </style>
+    </head>
+    <body>
+        <h1>📹 Monitor de Foso</h1>
+        <div style="margin-bottom:20px;">
+            {f'<iframe src="{video_url}"></iframe>' if video_url else '<p>Cámara no configurada</p>'}
+        </div>
+        <input type="text" id="url" placeholder="URL Cámara IP" style="width:70%; padding:10px;" value="{video_url}">
+        <button class="btn" onclick="save()">Guardar URL</button>
+        <script>
+            function save() {{
+                const val = document.getElementById('url').value;
+                fetch('/api/config-video-foso', {{
+                    method: 'POST',
+                    headers: {{'Content-Type': 'application/json'}},
+                    body: JSON.stringify({{url: val}})
+                }}).then(() => location.reload());
+            }}
+        </script>
+    </body>
+    </html>
+    """
+    return html
+
+@app.route('/api/config-video-foso', methods=['POST'])
+def config_video_foso():
+    data = request.json
+    config = cargar_config()
+    config['video_foso_url'] = data.get('url', '')
+    guardar_config(config)
+    return jsonify({"status": "ok"})
+
+# --- INTEGRACIÓN TELEGRAM ---
+async def enviar_telegram(token, chat_id, mensaje):
+    url = f"https://api.telegram.org/bot{token}/sendMessage"
+    try:
+        async with aiohttp.ClientSession() as session:
+            await session.post(url, json={'chat_id': chat_id, 'text': mensaje, 'parse_mode': 'HTML'})
+    except Exception as e:
+        logger.error(f"Error Telegram: {e}")
+
+if __name__ == '__main__':
+    # Inicialización de IA al arranque
+    cfg = cargar_config()
+    if cfg.get('openai_key'):
+        servicio_ia.inicializar(cfg['openai_key'])
+        
+    app.run(host='0.0.0.0', port=5000, debug=True)
