@@ -1,379 +1,494 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AutomaDrive Pro | Asistente Técnico IA</title>
-    <style>
-        :root {
-            --primary: #4ade80;
-            --bg: #0f172a;
-            --card: #1e293b;
-            --text: #f1f5f9;
-            --accent: #334155;
-            --neon: 0 0 20px rgba(74, 222, 128, 0.4);
-        }
+ <meta charset="UTF-8">
+ <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>AutomaDrive Pro | Asistente Técnico IA</title>
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+ <!-- ICONOS unificados -->
+ <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+ <link rel="icon" type="image/png" sizes="512x512" href="{{ url_for('static', filename='automadrive-icon.png') }}">
+ <link rel="apple-touch-icon" sizes="512x512" href="{{ url_for('static', filename='automadrive-icon.png') }}">
 
-        body {
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            color: var(--text);
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            min-height: 100vh;
-        }
+ <link rel="stylesheet"
+ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 5%;
-            background: rgba(0,0,0,0.8);
-            border-bottom: 2px solid var(--primary);
-            backdrop-filter: blur(10px);
-        }
+ <style>
+ :root {
+ --primary: #4ade80;
+ --bg: #0b0e14; /* igual que admin */
+ --card: #161b22; /* igual que admin */
+ --text: #e6edf3; /* igual que admin */
+ --accent: #30363d; /* borde admin */
+ --btn-bg: #21262d; /* botones admin */
+ --gold: #e3b341; /* dorado admin */
+ --danger: #ff4444;
+ --muted: #94a3b8;
+ }
 
-        .logo {
-            font-size: 1.8rem;
-            font-weight: 900;
-            color: var(--primary);
-            text-shadow: 0 0 10px rgba(74, 222, 128, 0.5);
-        }
+ * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        .container {
-            display: grid;
-            grid-template-columns: 420px 1fr 380px;
-            gap: 25px;
-            padding: 40px;
-            max-width: 1800px;
-            margin: 0 auto;
-        }
+ body {
+ font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+ background: radial-gradient(circle at top, #111827 0, #020617 45%, #000 100%);
+ color: var(--text);
+ min-height: 100vh;
+ }
 
-        .panel {
-            background: var(--card);
-            border: 1px solid var(--accent);
-            border-radius: 16px;
-            padding: 28px;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.5);
-            transition: all 0.3s ease;
-        }
+ .page {
+ display: flex;
+ min-height: 100vh;
+ }
 
-        .panel:hover {
-            border-color: var(--primary);
-            transform: translateY(-5px);
-            box-shadow: var(--neon);
-        }
+ .left {
+ flex: 1;
+ padding: 2.5rem 3rem;
+ display: flex;
+ flex-direction: column;
+ gap: 2rem;
+ }
 
-        .panel-title {
-            color: var(--primary);
-            font-size: 1.4rem;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
+ .right {
+ flex: 1;
+ position: relative;
+ overflow: hidden;
+ padding: 2rem;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ }
 
-        .subtitle {
-            color: #94a3b8;
-            font-size: 0.9rem;
-            margin-bottom: 20px;
-        }
+ .badge {
+ display: inline-flex;
+ align-items: center;
+ gap: .5rem;
+ padding: .25rem .75rem;
+ border-radius: 999px;
+ background: rgba(34, 197, 94, 0.12);
+ border: 1px solid rgba(74, 222, 128, 0.35);
+ color: var(--primary);
+ font-size: .75rem;
+ font-weight: 600;
+ width: fit-content;
+ }
 
-        /* PANEL IZQUIERDO: CHAT IA */
-        .chat-panel {
-            border: 2px solid var(--primary);
-            min-height: 650px;
-        }
+ .badge i {
+ color: var(--gold);
+ }
 
-        #chat-box {
-            background: #0a1120;
-            height: 480px;
-            overflow-y: auto;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 15px;
-            border: 1px solid #1e293b;
-            display: flex;
-            flex-direction: column;
-        }
+ .logo-row {
+ display: flex;
+ align-items: center;
+ justify-content: space-between;
+ gap: 1rem;
+ }
 
-        #chat-box::-webkit-scrollbar { width: 8px; }
-        #chat-box::-webkit-scrollbar-thumb {
-            background: var(--primary);
-            border-radius: 10px;
-        }
+ .logo-text {
+ font-weight: 700;
+ letter-spacing: .05em;
+ color: var(--text);
+ font-size: 1rem;
+ }
 
-        .message {
-            padding: 14px 18px;
-            border-radius: 12px;
-            margin-bottom: 12px;
-            max-width: 88%;
-            line-height: 1.6;
-            animation: slideIn 0.3s ease;
-        }
+ h1 {
+ font-size: clamp(2.5rem, 3.4vw, 3.4rem);
+ line-height: 1.05;
+ letter-spacing: -.03em;
+ }
 
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+ h1 span {
+ background: linear-gradient(135deg, #4ade80, #22c55e, #a855f7);
+ -webkit-background-clip: text;
+ background-clip: text;
+ color: transparent;
+ }
 
-        .bot-msg {
-            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-            align-self: flex-start;
-            border-left: 3px solid var(--primary);
-        }
+ .subtitle {
+ max-width: 32rem;
+ color: var(--muted);
+ font-size: .98rem;
+ line-height: 1.7;
+ }
 
-        .user-msg {
-            background: linear-gradient(135deg, var(--primary) 0%, #22c55e 100%);
-            color: #000;
-            font-weight: 600;
-            align-self: flex-end;
-            box-shadow: 0 4px 12px rgba(74, 222, 128, 0.3);
-        }
+ .points {
+ display: flex;
+ flex-wrap: wrap;
+ gap: .75rem .75rem;
+ margin-top: .75rem;
+ }
 
-        .input-area {
-            display: flex;
-            gap: 12px;
-            background: #000;
-            padding: 12px;
-            border-radius: 10px;
-        }
+ .pill {
+ font-size: .8rem;
+ padding: .35rem .7rem;
+ border-radius: 999px;
+ background: rgba(15, 23, 42, 0.9);
+ border: 1px solid rgba(148, 163, 184, 0.4);
+ color: #e2e8f0;
+ display: inline-flex;
+ align-items: center;
+ gap: .4rem;
+ }
 
-        input {
-            flex: 1;
-            background: var(--card);
-            border: 1px solid var(--accent);
-            color: white;
-            padding: 15px;
-            border-radius: 8px;
-            font-size: 1rem;
-            outline: none;
-            transition: all 0.2s;
-        }
+ .pill i {
+ color: var(--primary);
+ font-size: .7rem;
+ }
 
-        input:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 15px rgba(74, 222, 128, 0.3);
-        }
+ .cta-row {
+ display: flex;
+ flex-wrap: wrap;
+ gap: .75rem;
+ margin-top: 1.5rem;
+ }
 
-        .btn {
-            background: var(--primary);
-            color: #000;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-size: 1rem;
-        }
+ .btn-primary {
+ background: linear-gradient(135deg, #22c55e, #16a34a);
+ border: none;
+ color: #0b1120;
+ font-weight: 700;
+ padding: .75rem 1.4rem;
+ border-radius: .75rem;
+ cursor: pointer;
+ font-size: .9rem;
+ display: inline-flex;
+ align-items: center;
+ gap: .5rem;
+ box-shadow: 0 18px 45px rgba(34, 197, 94, 0.4);
+ }
 
-        .btn:hover {
-            background: #22c55e;
-            transform: scale(1.05);
-            box-shadow: 0 6px 20px rgba(74, 222, 128, 0.4);
-        }
+ .btn-secondary {
+ background: rgba(15, 23, 42, 0.9);
+ border: 1px solid rgba(148, 163, 184, 0.5);
+ color: #e2e8f0;
+ font-weight: 500;
+ padding: .75rem 1.25rem;
+ border-radius: .75rem;
+ cursor: pointer;
+ font-size: .9rem;
+ display: inline-flex;
+ align-items: center;
+ gap: .5rem;
+ }
 
-        .btn:active { transform: scale(0.98); }
+ .credibility {
+ display: flex;
+ flex-wrap: wrap;
+ gap: 1rem;
+ align-items: center;
+ margin-top: 2rem;
+ }
 
-        /* PANEL CENTRAL: MAPA */
-        .map-frame {
-            width: 100%;
-            height: 580px;
-            border-radius: 12px;
-            border: 2px solid #475569;
-            margin-top: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-        }
+ .stat {
+ display: flex;
+ flex-direction: column;
+ font-size: .8rem;
+ color: var(--muted);
+ }
 
-        /* PANEL DERECHO: SUSCRIPCIÓN */
-        .buy-panel {
-            background: linear-gradient(180deg, var(--card) 0%, #0a3d20 100%);
-            border: 2px solid var(--primary);
-            text-align: center;
-        }
+ .stat strong {
+ font-size: 1.1rem;
+ color: #e5e7eb;
+ }
 
-        .product-img {
-            width: 100%;
-            height: 240px;
-            background: linear-gradient(135deg, var(--primary) 0%, #10b981 100%);
-            border-radius: 12px;
-            margin-bottom: 25px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 4rem;
-            font-weight: 900;
-            color: #000;
-            box-shadow: 0 12px 35px rgba(74, 222, 128, 0.4);
-        }
+ .labels {
+ display: flex;
+ gap: .5rem;
+ flex-wrap: wrap;
+ font-size: .7rem;
+ color: var(--muted);
+ }
 
-        .price {
-            font-size: 3.5rem;
-            font-weight: 900;
-            color: var(--primary);
-            margin: 20px 0;
-            text-shadow: 0 0 15px rgba(74, 222, 128, 0.6);
-        }
+ .labels span {
+ padding: .35rem .6rem;
+ border-radius: 999px;
+ border: 1px solid rgba(75, 85, 99, 0.9);
+ background: rgba(15, 23, 42, 0.9);
+ }
 
-        footer {
-            text-align: center;
-            padding: 40px;
-            color: #64748b;
-            font-size: 0.9rem;
-            margin-top: 50px;
-        }
+ /* Derecha: imagen/fondo */
+ .hero-frame {
+ position: relative;
+ width: 100%;
+ max-width: 560px;
+ border-radius: 1.5rem;
+ padding: 1px;
+ background: linear-gradient(135deg, rgba(56, 189, 248, 0.7), rgba(251, 191, 36, 0.8), rgba(88, 28, 135, 0.8));
+ box-shadow:
+ 0 30px 80px rgba(15, 23, 42, 0.8),
+ 0 0 120px rgba(56, 189, 248, 0.5),
+ 0 0 160px rgba(251, 191, 36, 0.4);
+ }
 
-        @media (max-width: 1200px) {
-            .container { grid-template-columns: 1fr; }
-        }
+ .hero-inner {
+ border-radius: 1.45rem;
+ background: radial-gradient(circle at top, rgba(15, 23, 42, 0.9) 0, #020617 60%);
+ padding: 1.5rem 1.75rem 1.75rem 1.75rem;
+ position: relative;
+ overflow: hidden;
+ }
 
-        .status-dot {
-            width: 10px;
-            height: 10px;
-            background: var(--primary);
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 8px;
-            animation: pulse 2s infinite;
-        }
+ .hero-tag {
+ display: inline-flex;
+ align-items: center;
+ gap: .4rem;
+ padding: .25rem .6rem;
+ border-radius: 999px;
+ background: rgba(15, 23, 42, 0.9);
+ border: 1px solid rgba(148, 163, 184, 0.5);
+ color: #e5e7eb;
+ font-size: .75rem;
+ margin-bottom: .75rem;
+ }
 
-        @keyframes pulse {
-            0%, 100% { opacity: 1; box-shadow: 0 0 10px var(--primary); }
-            50% { opacity: 0.6; }
-        }
-    </style>
+ .hero-tag i {
+ color: #22c55e;
+ }
+
+ .hero-image {
+ position: relative;
+ border-radius: 1.25rem;
+ overflow: hidden;
+ border: 1px solid rgba(148, 163, 184, 0.4);
+ }
+
+ .hero-image img {
+ display: block;
+ width: 100%;
+ height: auto;
+ }
+
+ .hero-glow {
+ position: absolute;
+ inset: 0;
+ background: radial-gradient(circle at 20% 0%, rgba(56, 189, 248, 0.25), transparent 55%),
+ radial-gradient(circle at 80% 100%, rgba(251, 191, 36, 0.25), transparent 55%);
+ mix-blend-mode: screen;
+ pointer-events: none;
+ }
+
+ .hero-grid {
+ position: absolute;
+ inset: 0;
+ background-image:
+ linear-gradient(rgba(148, 163, 184, 0.15) 1px, transparent 1px),
+ linear-gradient(90deg, rgba(148, 163, 184, 0.18) 1px, transparent 1px);
+ background-size: 40px 40px;
+ opacity: 0.18;
+ pointer-events: none;
+ }
+
+ .hero-badge {
+ position: absolute;
+ bottom: 1.25rem;
+ right: 1.25rem;
+ padding: .5rem .85rem;
+ border-radius: 999px;
+ background: rgba(15, 23, 42, 0.95);
+ border: 1px solid rgba(251, 191, 36, 0.7);
+ color: #fef9c3;
+ font-size: .75rem;
+ display: inline-flex;
+ align-items: center;
+ gap: .4rem;
+ }
+
+ .hero-badge i {
+ color: #fbbf24;
+ }
+
+ .hero-metric {
+ position: absolute;
+ top: 1.25rem;
+ left: 1.25rem;
+ padding: .4rem .75rem;
+ border-radius: .9rem;
+ background: rgba(15, 23, 42, 0.9);
+ border: 1px solid rgba(52, 211, 153, 0.7);
+ color: #bbf7d0;
+ font-size: .75rem;
+ display: inline-flex;
+ align-items: center;
+ gap: .35rem;
+ }
+
+ .hero-metric span {
+ font-weight: 600;
+ }
+
+ .hero-metric small {
+ color: #6ee7b7;
+ font-size: .7rem;
+ }
+
+ .hero-footer {
+ margin-top: 1.1rem;
+ display: flex;
+ justify-content: space-between;
+ align-items: center;
+ font-size: .75rem;
+ color: var(--muted);
+ }
+
+ .hero-footer-logos {
+ display: flex;
+ gap: .25rem;
+ align-items: center;
+ }
+
+ .hero-footer-logos span {
+ width: 20px;
+ height: 20px;
+ border-radius: 999px;
+ background: radial-gradient(circle at 30% 20%, #4ade80, #064e3b);
+ border: 1px solid rgba(34, 197, 94, 0.6);
+ }
+
+ .hero-footer-logos span:nth-child(2) {
+ background: radial-gradient(circle at 30% 20%, #38bdf8, #0f172a);
+ border-color: rgba(56, 189, 248, 0.7);
+ }
+
+ .hero-footer-logos span:nth-child(3) {
+ background: radial-gradient(circle at 30% 20%, #f97316, #7c2d12);
+ border-color: rgba(251, 146, 60, 0.8);
+ }
+
+ .hero-footer-text strong {
+ color: #e5e7eb;
+ }
+
+ @media (max-width: 880px) {
+ .page {
+ flex-direction: column;
+ }
+ .left {
+ padding: 1.75rem 1.5rem 1.5rem 1.5rem;
+ }
+ .right {
+ padding: 0 1.5rem 2rem 1.5rem;
+ }
+ }
+ </style>
 </head>
 <body>
+<div class="page">
+ <div class="left">
+ <div class="logo-row">
+ <div class="badge">
+ <i class="fa-solid fa-robot"></i>
+ IA experta para talleres
+ </div>
+ </div>
 
-<header>
-    <div class="logo">
-        AUTOMA<span style="color:white;">DRIVE</span> PRO
-    </div>
-    <a href="mailto:info.automadrivepro@gmail.com" 
-       style="color: var(--primary); text-decoration: none; font-weight: bold; font-size: 1.1rem;">
-        📧 CONTACTO
-    </a>
-</header>
+ <div>
+ <p class="logo-text">AUTOMADRIVE PRO</p>
+ <h1>
+ El copiloto de IA<br>
+ para tu <span>taller mecánico</span>
+ </h1>
+ </div>
 
-<div class="container">
-    <!-- IZQUIERDA: CHAT IA -->
-    <div class="panel chat-panel">
-        <h2 class="panel-title">
-            <span class="status-dot"></span>
-            🤖 ASISTENTE IA
-        </h2>
-        <p class="subtitle">Consultas técnicas en tiempo real</p>
-        
-        <div id="chat-box">
-            <div class="message bot-msg">
-                🔧 ¡Hola! Soy tu asistente técnico AutomaDrive.<br><br>
-                Puedo ayudarte con:<br>
-                • Especificaciones de aceites<br>
-                • Pares de apriete<br>
-                • Diagnóstico de averías<br>
-                • Identificación de piezas<br><br>
-                <strong>Prueba:</strong> "Aceite Golf 2016 TDI"
-            </div>
-        </div>
-        
-        <div class="input-area">
-            <input type="text" id="user-input" placeholder="Escribe tu consulta...">
-            <button class="btn" onclick="sendMessage()">ENVIAR</button>
-        </div>
-    </div>
+ <p class="subtitle">
+ AutomaDrive Pro analiza incidencias, órdenes de trabajo y mensajes de clientes
+ para ayudarte a diagnosticar, presupuestar y priorizar trabajos en tu taller.
+ Todo con un asistente técnico que habla tu idioma.
+ </p>
 
-    <!-- CENTRO: GOOGLE MAPS -->
-    <div class="panel">
-        <h2 class="panel-title">📍 GEOLOCALIZACIÓN</h2>
-        <p class="subtitle">Servicios en tiempo real</p>
-        <iframe 
-            class="map-frame"
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d194347.3503565157!2d-3.81961955!3d40.41406305!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xd422997800a3c81%3A0xc436dec611c23613!2sMadrid!5e0!3m2!1ses!2ses!4v1700000000000" 
-            allowfullscreen 
-            loading="lazy">
-        </iframe>
-    </div>
+ <div class="points">
+ <span class="pill">
+ <i class="fa-solid fa-sparkles"></i>
+ IA entrenada en casos reales
+ </span>
+ <span class="pill">
+ <i class="fa-solid fa-car-on"></i>
+ Órdenes de trabajo y revisiones
+ </span>
+ <span class="pill">
+ <i class="fa-solid fa-comments"></i>
+ Conversación natural con clientes
+ </span>
+ <span class="pill">
+ <i class="fa-solid fa-gauge-high"></i>
+ Mejor planificación del taller
+ </span>
+ </div>
 
-    <!-- DERECHA: SUSCRIPCIÓN -->
-    <div class="panel buy-panel">
-        <div class="product-img">AMD</div>
-        <h2 style="color: white; font-size: 1.8rem; margin-bottom: 15px;">PLAN PRO</h2>
-        <div class="price">32€<span style="font-size: 1.2rem; color:white;">/mes</span></div>
-        <p style="color: #cbd5e1; margin-bottom: 30px; line-height: 1.8;">
-            ✓ IA ilimitada<br>
-            ✓ Panel de gestión<br>
-            ✓ Actualizaciones
-        </p>
-        
-        <script async src="https://js.stripe.com/v3/buy-button.js"></script>
-        <stripe-buy-button
-            buy-button-id="buy_btn_1SgWN93L9tn5sJrayCo0SzzX"
-            publishable-key="pk_live_51SgV1F3L9tn5sJrat7osrdOy9lKC7Y2S8nt1LW5MXzvIMkPQgDBJrP1y61y0KPZVoXOFGb4cqAwhZRQsQ7G743yT00M8rKQbiw"
-        ></stripe-buy-button>
-        
-        <p style="color: var(--primary); font-size: 0.8rem; margin-top: 20px; font-weight: 600;">
-            ✓ IVA INCLUIDO | PAGO SEGURO
-        </p>
-    </div>
+ <div class="cta-row">
+ <!-- Ajusta href al endpoint real de tu app -->
+ <a href="{{ url_for('admin') }}">
+ <button class="btn-primary">
+ <i class="fa-solid fa-wrench"></i>
+ Ir al panel técnico
+ </button>
+ </a>
+
+ <!-- Ajusta href si tienes una ruta de demo pública -->
+ <a href="#demo">
+ <button class="btn-secondary">
+ <i class="fa-regular fa-circle-play"></i>
+ Ver demo rápida
+ </button>
+ </a>
+ </div>
+
+ <div class="credibility">
+ <div class="stat">
+ <strong>+120</strong>
+ Talleres probando AutomaDrive
+ </div>
+ <div class="stat">
+ <strong>Hasta 35%</strong>
+ más productividad por técnico
+ </div>
+ <div class="labels">
+ <span>Datos en la nube</span>
+ <span>Privacidad de cliente</span>
+ <span>IA aplicada al día a día</span>
+ </div>
+ </div>
+ </div>
+
+ <div class="right">
+ <div class="hero-frame">
+ <div class="hero-inner">
+ <div class="hero-tag">
+ <i class="fa-solid fa-bolt"></i>
+ Vista previa del asistente AutomaDrive Pro
+ </div>
+
+ <div class="hero-image">
+ <!-- Sustituye la ruta por tu imagen real en /static -->
+ <img src="{{ url_for('static', filename='automadrive-hero.png') }}" alt="AutomaDrive Pro">
+ <div class="hero-grid"></div>
+ <div class="hero-glow"></div>
+
+ <div class="hero-metric">
+ <i class="fa-solid fa-signal"></i>
+ <span>Operativo 24/7</span>
+ <small>Sin descansos, sin despistes</small>
+ </div>
+
+ <div class="hero-badge">
+ <i class="fa-solid fa-shield-halved"></i>
+ Datos de cliente siempre cifrados
+ </div>
+ </div>
+
+ <div class="hero-footer">
+ <div class="hero-footer-logos">
+ <span></span>
+ <span></span>
+ <span></span>
+ </div>
+ <div class="hero-footer-text">
+ AutomaDrive Pro ya está ayudando a <strong>talleres digitales</strong>
+ a responder más rápido y con menos errores.
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
 </div>
-
-<footer>
-    © 2025 AutomaDrive Pro - Inteligencia Artificial para Talleres
-</footer>
-
-<script>
-    async function sendMessage() {
-        const input = document.getElementById('user-input');
-        const message = input.value.trim();
-        
-        if (!message) {
-            alert('Escribe una consulta');
-            return;
-        }
-
-        addMessage('user', message);
-        input.value = '';
-
-        const typing = addMessage('bot', '⚙️ Consultando base de datos...');
-
-        try {
-            const res = await fetch('/ask', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message })
-            });
-            
-            if (!res.ok) throw new Error('Error de servidor');
-            
-            const data = await res.json();
-            typing.remove();
-            
-            if (data.response) {
-                addMessage('bot', data.response);
-            } else {
-                addMessage('bot', '❌ Error: Sin respuesta del servidor');
-            }
-            
-        } catch (error) {
-            typing.textContent = '❌ Error de conexión. Verifica que Flask esté corriendo.';
-            console.error('Error:', error);
-        }
-    }
-
-    function addMessage(type, text) {
-        const chatBox = document.getElementById('chat-box');
-        const msg = document.createElement('div');
-        msg.className = `message ${type === 'user' ? 'user-msg' : 'bot-msg'}`;
-        msg.textContent = text;
-        chatBox.appendChild(msg);
-        chatBox.scrollTop = chatBox.scrollHeight;
-        return msg;
-    }
-
-    document.getElementById('user-input').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') sendMessage();
-    });
-</script>
 </body>
 </html>

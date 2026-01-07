@@ -3,9 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard TÃ©cnico | AutomaDrive Pro</title>
-    <link rel="icon" href="{{ url_for('static', filename='ia-logo.png') }}" type="image/png">
+    <title>Dashboard Técnico | AutomaDrive Pro</title>
+
+    <!-- ✅ ICONOS (nuevo) -->
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="icon" type="image/png" sizes="512x512" href="{{ url_for('static', filename='automadrive-icon.png') }}">
+    <!-- ✅ iPhone / iPad (nuevo) -->
+    <link rel="apple-touch-icon" sizes="512x512" href="{{ url_for('static', filename='automadrive-icon.png') }}">
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root { 
             --primary: #4ade80; 
@@ -15,30 +22,46 @@
             --btn-bg: #21262d; 
             --gold: #e3b341; 
             --accent: #00f2ff;
+            --danger: #e74c3c;
         }
+        * { box-sizing: border-box; }
         body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; padding: 15px; display: flex; flex-direction: column; min-height: 100vh; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--btn-bg); padding-bottom: 10px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--btn-bg); padding-bottom: 10px; flex-wrap: wrap; gap: 10px; }
         .logo-admin { font-weight: 800; color: var(--primary); font-size: 1.5rem; display: flex; align-items: center; gap: 10px; }
-        .nav-buttons { display: flex; gap: 10px; align-items: center; }
-        .master-clock { background: #000; color: var(--primary); padding: 8px 15px; border-radius: 8px; border: 1px solid var(--primary); font-family: monospace; font-size: 1.2rem; }
+        .nav-buttons { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .master-clock { background: #000; color: var(--primary); padding: 8px 15px; border-radius: 8px; border: 1px solid var(--primary); font-family: monospace; font-size: 1.2rem; min-width: 100px; text-align: center;}
         .main-layout { display: grid; grid-template-columns: 350px 1fr 280px; gap: 15px; flex: 1; }
-        .btn-nav { background: var(--btn-bg); border: 1px solid #30363d; color: white; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 8px; }
+        @media (max-width: 1200px) { .main-layout { grid-template-columns: 1fr; } }
+        .btn-nav { background: var(--btn-bg); border: 1px solid #30363d; color: white; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 8px; transition: 0.3s; }
+        .btn-nav:hover { background: #30363d; border-color: var(--primary); }
         .search-widget, .camera-section, .ai-assistant, .ad-box, .internal-comm { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid #30363d; margin-bottom: 15px; }
         .video-box, .map-box { width: 100%; height: 350px; background: #000; border-radius: 12px; border: 1px solid #30363d; margin-bottom: 15px; overflow: hidden; }
-        .modal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); }
-        .modal-content { background: var(--card); margin: 5% auto; padding: 25px; border-radius: 15px; width: 450px; border: 1px solid var(--primary); }
-        input, textarea { width: 100%; background: #0d1117; border: 1px solid #30363d; color: white; padding: 12px; border-radius: 8px; margin-bottom: 15px; box-sizing: border-box; }
+        
+        /* Modales */
+        .modal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); backdrop-filter: blur(8px); }
+        .modal-content { background: var(--card); margin: 5% auto; padding: 25px; border-radius: 15px; width: 90%; max-width: 450px; border: 1px solid var(--primary); box-shadow: 0 0 30px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto; }
+        
+        input, textarea, select { width: 100%; background: #0d1117; border: 1px solid #30363d; color: white; padding: 12px; border-radius: 8px; margin-bottom: 15px; box-sizing: border-box; outline: none; font-size: 0.9rem; font-family: inherit; }
+        input:focus, textarea:focus { border-color: var(--primary); background: #121d2f; }
+        label { display: block; margin-bottom: 5px; font-size: 0.8rem; color: var(--primary); font-weight: bold; text-transform: uppercase; }
+        
+        .config-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         footer { margin-top: auto; padding: 15px; border-top: 1px solid #333; text-align: center; font-size: 0.75rem; color: #666; }
+        .loading { color: var(--accent); }
+        .error { color: var(--danger); }
+        .success { color: var(--primary); }
+        #ai-chat-admin { padding: 5px; background: #0d1117; border-radius: 5px; }
     </style>
 </head>
 <body>
 
     <div class="header">
         <div class="logo-admin">
-            <img src="{{ url_for('static', filename='ia-logo.png') }}" style="width:30px;">
+            <img src="{{ url_for('static', filename='ia-logo.png') }}" style="width:30px; height:30px; object-fit:contain;" alt="Logo" onerror="this.style.display='none'">
             <div><span>Automa</span>Drive Pro <small style="display:block; font-size: 0.4em; color: var(--gold);">PANEL DE CONTROL</small></div>
         </div>
         <div class="nav-buttons">
+            <button class="btn-nav" onclick="abrirConfig()"><i class="fas fa-cog" style="color:var(--gold);"></i> CONFIG</button>
             <button class="btn-nav" onclick="toggleActividad()"><i class="fas fa-history"></i> ACTIVIDAD</button>
             <button class="btn-nav" onclick="nuevaFicha()"><i class="fas fa-plus"></i> NUEVO INGRESO</button>
             <div class="master-clock" id="reloj-maestro">00:00:00</div>
@@ -51,69 +74,72 @@
                 <div style="font-size:0.7em; font-weight:bold; margin-bottom:5px;">BUSCAR EXPEDIENTE</div>
                 <div style="display:flex; border:2px solid #000; border-radius:8px; overflow:hidden;">
                     <div style="background:#003366; color:white; padding:10px; font-weight:bold;">E</div>
-                    <input type="text" id="widget-search" placeholder="0000 BBB" style="margin:0; border:none; color:#000; background:#fff; text-transform:uppercase; font-weight:bold;">
-                    <button onclick="buscarDesdeWidget()" style="background:#000; color:var(--primary); border:none; padding:10px; cursor:pointer;">GO</button>
+                    <input type="text" id="widget-search" placeholder="0000 BBB" style="margin:0; border:none; color:#000; background:#fff; text-transform:uppercase; font-weight:bold;" onkeypress="if(event.key==='Enter') buscarDesdeWidget()">
+                    <button onclick="buscarDesdeWidget()" style="background:#000; color:var(--primary); border:none; padding:10px; cursor:pointer; font-weight:bold;">GO</button>
                 </div>
             </div>
 
             <div class="camera-section">
                 <button class="btn-nav" style="width:100%; background: var(--primary); color: #000; justify-content:center;" onclick="document.getElementById('camera-input').click()">
-                    <i class="fas fa-camera"></i> CAPTURAR AVERÃA
+                    <i class="fas fa-camera"></i> CAPTURAR AVERÍA
                 </button>
-                <input type="file" id="camera-input" accept="image/*" capture="environment" style="display:none">
+                <input type="file" id="camera-input" accept="image/*" capture="environment" style="display:none" onchange="subirImagen(event)">
+                <div id="camera-preview" style="margin-top:10px; display:none;">
+                    <img id="preview-img" style="width:100%; border-radius:8px; max-height:150px; object-fit:cover;">
+                    <button onclick="cancelarImagen()" style="width:100%; margin-top:5px; background:var(--danger); color:white; border:none; padding:5px; border-radius:5px; cursor:pointer;">Cancelar</button>
+                </div>
             </div>
 
             <div class="ai-assistant">
-                <div style="color:var(--primary); font-weight:bold; margin-bottom:10px;"><i class="fas fa-robot"></i> CONSULTA TÃ‰CNICA</div>
-                <div id="ai-chat-admin" style="height:100px; font-size:0.8rem; color:#4ade80; overflow-y:auto; margin-bottom:10px;">Listo...</div>
-                <input type="text" id="ai-admin-input" placeholder="Pregunta algo..." style="margin:0;">
+                <div style="color:var(--primary); font-weight:bold; margin-bottom:10px;"><i class="fas fa-robot"></i> CONSULTA TÉCNICA</div>
+                <div id="ai-chat-admin" style="height:100px; font-size:0.8rem; color:#4ade80; overflow-y:auto; margin-bottom:10px;">Sistema IA listo para consultas técnicas...</div>
+                <div style="display:flex; gap:5px;">
+                    <input type="text" id="ai-admin-input" placeholder="Pregunta algo..." style="margin:0; flex:1;" onkeypress="if(event.key==='Enter') enviarConsultaAI()">
+                    <button onclick="enviarConsultaAI()" style="background:var(--primary); color:#000; border:none; padding:10px; border-radius:8px; cursor:pointer; font-weight:bold;"><i class="fas fa-paper-plane"></i></button>
+                </div>
             </div>
         </div>
 
         <div class="center-col">
             <div class="video-box">
-                <iframe width="100%" height="100%" src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&mute=1" frameborder="0"></iframe>
+                <iframe width="100%" height="100%" src="https://www.youtube.com/embed/videoseries?list=PL2-fXpB9XlC7p89Hw-qO7qD_6C8oFpYQ9&autoplay=0&mute=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
             </div>
             <div class="map-box">
-                <iframe width="100%" height="100%" frameborder="0" src="https://maps.google.com/maps?q=Madrid&t=&z=13&ie=UTF8&iwloc=&output=embed"></iframe>
+                <iframe width="100%" height="100%" frameborder="0" src="https://maps.google.com/maps?q=taller%20mecanico&t=&z=13&ie=UTF8&iwloc=&output=embed"></iframe>
             </div>
         </div>
 
         <div class="side-col">
             <div class="ad-box">
                 <i class="fas fa-gas-pump" style="color:var(--gold);"></i> <b>CASTROL PRO</b>
-                <button style="width:100%; margin-top:10px; background:var(--gold); border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;">PEDIDO RÃPIDO</button>
+                <button onclick="pedidoRapido()" style="width:100%; margin-top:10px; background:var(--gold); border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer; color:#000;">PEDIDO RÁPIDO</button>
             </div>
             <div class="internal-comm" style="border-color:var(--accent);">
                 <h4 style="color:var(--accent); margin-top:0;"><i class="fas fa-truck"></i> PROVEEDORES 24/7</h4>
-                <button onclick="window.open('https://www.distriauto.es')" style="width:100%; background:#fff; color:#000; border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer; margin-bottom:10px;">DISTRIAUTO</button>
-                <button onclick="window.open('https://www.autodoc.es')" style="width:100%; background:#ffdb00; color:#000; border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;">AUTODOC</button>
+                <button onclick="window.open('https://www.distriauto.es', '_blank')" style="width:100%; background:#fff; color:#000; border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer; margin-bottom:10px;">DISTRIAUTO</button>
+                <button onclick="window.open('https://www.autodoc.es', '_blank')" style="width:100%; background:#ffdb00; color:#000; border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;">AUTODOC</button>
             </div>
             <div class="internal-comm">
-                <h4 style="color:var(--primary); margin-top:0;"><i class="fas fa-comments"></i> COMUNICACIÃ“N</h4>
-                <button style="width:100%; background:#0088cc; color:white; border:none; padding:10px; border-radius:8px; margin-bottom:10px;"><i class="fab fa-telegram-plane"></i> TELEGRAM</button>
-                <button style="width:100%; background:#28a745; color:white; border:none; padding:10px; border-radius:8px;"><i class="fas fa-video"></i> VIDEO FOSO</button>
+                <h4 style="color:var(--primary); margin-top:0;"><i class="fas fa-comments"></i> COMUNICACIÓN</h4>
+                <button onclick="abrirTelegram()" style="width:100%; background:#0088cc; color:white; border:none; padding:10px; border-radius:8px; margin-bottom:10px; cursor:pointer; font-weight:bold;"><i class="fab fa-telegram-plane"></i> TELEGRAM</button>
+                <button onclick="abrirVideoFoso()" style="width:100%; background:#28a745; color:white; border:none; padding:10px; border-radius:8px; cursor:pointer; font-weight:bold;"><i class="fas fa-video"></i> VIDEO FOSO</button>
             </div>
         </div>
     </div>
 
-    <footer>
-        AutomaDrive Pro Â© 2025 | Soporte: info.automadrivepro@gmail.com | ID: {{ id_dispositivo or 'RASP-PRO-01' }} | <a href="#" style="color:#666;">Privacidad</a>
-    </footer>
-
     <div id="miModal" class="modal">
         <div class="modal-content">
-            <h2 style="color:var(--primary); margin-top:0;">EXPEDIENTE TÃ‰CNICO</h2>
-            <label>MATRÃCULA</label>
+            <h2 style="color:var(--primary); margin-top:0;">EXPEDIENTE TÉCNICO</h2>
+            <label>MATRÍCULA</label>
             <input type="text" id="matricula" placeholder="1234ABC" style="text-transform:uppercase; font-weight:bold;">
             <label>CLIENTE</label>
             <input type="text" id="propietario" placeholder="Nombre completo">
-            <label>WHATSAPP</label>
-            <input type="text" id="telefono" placeholder="+34 744456978">
+            <label>WHATSAPP CLIENTE</label>
+            <input type="text" id="telefono" placeholder="+34 600000000">
             <label>NOTAS</label>
-            <textarea id="notes" rows="4" placeholder="DiagnÃ³stico..."></textarea>
+            <textarea id="notes" rows="4" placeholder="Diagnóstico inicial..."></textarea>
             <div style="display:flex; gap:10px;">
-                <button onclick="cerrarModal()" style="background:#e74c3c; color:white; border:none; padding:12px; border-radius:8px; flex:1; cursor:pointer; font-weight:bold;">CANCELAR</button>
+                <button onclick="cerrarModal()" style="background:var(--btn-bg); color:white; border:none; padding:12px; border-radius:8px; flex:1; cursor:pointer;">CANCELAR</button>
                 <button id="btn-guardar" onclick="guardarFicha()" style="background:var(--primary); color:#000; border:none; padding:12px; border-radius:8px; flex:2; cursor:pointer; font-weight:bold;">
                     <i class="fas fa-save"></i> GUARDAR Y AVISAR
                 </button>
@@ -121,53 +147,387 @@
         </div>
     </div>
 
+    <div id="modalConfig" class="modal">
+        <div class="modal-content" style="border-color: var(--gold); width: 500px;">
+            <h2 style="color:var(--gold); margin-top:0;"><i class="fas fa-tools"></i> AJUSTES DEL TALLER</h2>
+            <p style="font-size: 0.8rem; color: #888; margin-bottom: 20px;">Configura tus canales de comunicación oficiales.</p>
+            
+            <div style="border: 1px solid #333; padding: 15px; border-radius: 10px; margin-bottom: 15px;">
+                <label style="color: #25d366;"><i class="fab fa-whatsapp"></i> WHATSAPP BUSINESS</label>
+                <input type="text" id="config-wa-num" placeholder="Número del taller (ej: 34600111222)">
+                <input type="text" id="config-wa-token" placeholder="Token API WhatsApp (Si aplica)">
+            </div>
+
+            <div style="border: 1px solid #333; padding: 15px; border-radius: 10px; margin-bottom: 15px;">
+                <label style="color: #0088cc;"><i class="fab fa-telegram"></i> TELEGRAM BOT</label>
+                <input type="text" id="config-tg-token" placeholder="Token del Bot (de BotFather)">
+                <input type="text" id="config-tg-chatid" placeholder="ID de Chat o Grupo">
+            </div>
+
+            <div style="border: 1px solid #333; padding: 15px; border-radius: 10px; margin-bottom: 15px;">
+                <label style="color: var(--accent);"><i class="fas fa-brain"></i> INTELIGENCIA ARTIFICIAL</label>
+                <input type="password" id="config-openai-key" placeholder="API Key OpenAI (opcional, para IA avanzada)">
+                <small style="color: #888; font-size: 0.75rem;">Sin API key, funcionará con conocimiento local especializado.</small>
+            </div>
+
+            <div style="display:flex; gap:10px;">
+                <button onclick="cerrarConfig()" style="background:var(--btn-bg); color:white; border:none; padding:12px; border-radius:8px; flex:1; cursor:pointer;">CERRAR</button>
+                <button onclick="guardarConfig()" style="background:var(--gold); color:#000; border:none; padding:12px; border-radius:8px; flex:2; cursor:pointer; font-weight:bold;">
+                    <i class="fas fa-check"></i> GUARDAR CAMBIOS
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalActividad" class="modal">
+        <div class="modal-content" style="border-color: var(--accent); max-width: 800px;">
+            <h2 style="color:var(--accent); margin-top:0;"><i class="fas fa-history"></i> HISTORIAL DE ACTIVIDAD</h2>
+            <div id="actividad-content" style="max-height: 500px; overflow-y: auto; margin-top: 20px;"></div>
+            <button onclick="cerrarActividad()" style="width:100%; background:var(--btn-bg); color:white; border:none; padding:12px; border-radius:8px; margin-top:15px; cursor:pointer;">CERRAR</button>
+        </div>
+    </div>
+
+    <div id="modalPrivacidad" class="modal">
+        <div class="modal-content" style="border-color: var(--accent); max-width: 700px;">
+            <h2 style="color:var(--accent); margin-top:0;"><i class="fas fa-shield-alt"></i> POLÍTICA DE PRIVACIDAD</h2>
+            <div style="max-height: 500px; overflow-y: auto; margin-top: 20px; line-height: 1.6;">
+                <h3 style="color:var(--primary);">1. INFORMACIÓN QUE RECOPILAMOS</h3>
+                <p>AutomaDrive Pro recopila únicamente la información necesaria para el funcionamiento del sistema de gestión de taller:</p>
+                <ul>
+                    <li>Datos de vehículos (matrícula, marca, modelo)</li>
+                    <li>Información de clientes (nombre, número de contacto)</li>
+                    <li>Notas y diagnósticos técnicos</li>
+                    <li>Historial de actividades del sistema</li>
+                </ul>
+
+                <h3 style="color:var(--primary);">2. USO DE LA INFORMACIÓN</h3>
+                <p>La información recopilada se utiliza exclusivamente para:</p>
+                <ul>
+                    <li>Gestión de expedientes técnicos</li>
+                    <li>Comunicación con clientes a través de WhatsApp y Telegram</li>
+                    <li>Mejora del servicio de diagnóstico mediante IA</li>
+                    <li>Registro de actividades del taller</li>
+                </ul>
+
+                <h3 style="color:var(--primary);">3. ALMACENAMIENTO DE DATOS</h3>
+                <p>Los datos se almacenan localmente en el servidor del taller. No se comparten con terceros ni se transmiten a servidores externos, excepto cuando se utiliza la API de OpenAI para consultas técnicas (en cuyo caso se aplica su política de privacidad).</p>
+
+                <h3 style="color:var(--primary);">4. SEGURIDAD</h3>
+                <p>Implementamos medidas de seguridad técnicas y organizativas para proteger sus datos contra acceso no autorizado, pérdida o destrucción.</p>
+
+                <h3 style="color:var(--primary);">5. DERECHOS DEL USUARIO</h3>
+                <p>Usted tiene derecho a:</p>
+                <ul>
+                    <li>Acceder a sus datos personales</li>
+                    <li>Rectificar información incorrecta</li>
+                    <li>Solicitar la eliminación de sus datos</li>
+                    <li>Oponerse al tratamiento de sus datos</li>
+                </ul>
+
+                <h3 style="color:var(--primary);">6. COOKIES Y TECNOLOGÍAS SIMILARES</h3>
+                <p>Utilizamos localStorage del navegador para guardar preferencias de configuración. Esta información permanece en su dispositivo y no se transmite a servidores externos.</p>
+
+                <h3 style="color:var(--primary);">7. INTEGRACIÓN CON SERVICIOS DE TERCEROS</h3>
+                <p>El sistema puede integrarse con:</p>
+                <ul>
+                    <li><strong>OpenAI:</strong> Para consultas técnicas avanzadas (opcional). Consulte su política de privacidad en openai.com</li>
+                    <li><strong>Telegram:</strong> Para comunicación. Consulte su política en telegram.org/privacy</li>
+                    <li><strong>WhatsApp Business:</strong> Para comunicación. Consulte su política en whatsapp.com/legal</li>
+                </ul>
+
+                <h3 style="color:var(--primary);">8. CONTACTO</h3>
+                <p>Para ejercer sus derechos o realizar consultas sobre privacidad, contacte con: <strong>info.automadrivepro@gmail.com</strong></p>
+
+                <p style="margin-top: 20px; font-size: 0.85rem; color: #888;"><em>Última actualización: Diciembre 2024</em></p>
+            </div>
+            <button onclick="cerrarPrivacidad()" style="width:100%; background:var(--btn-bg); color:white; border:none; padding:12px; border-radius:8px; margin-top:15px; cursor:pointer;">CERRAR</button>
+        </div>
+    </div>
+
+    <footer>
+        AutomaDrive Pro © 2025 | Soporte: <span id="email-safe"></span> | ID: {{ id_dispositivo or 'RASP-PRO-01' }} | <span id="status-api" style="font-size:0.7rem;">Conectando...</span>
+        <div style="margin-top: 5px;">
+            <a href="#" onclick="event.preventDefault(); abrirPrivacidad();" style="color: var(--accent); text-decoration: none; font-size: 0.7rem; margin-right: 15px;"><i class="fas fa-shield-alt"></i> Política de Privacidad</a>
+            <a href="#" onclick="event.preventDefault(); abrirTerminos();" style="color: var(--accent); text-decoration: none; font-size: 0.7rem;"><i class="fas fa-file-contract"></i> Términos de Uso</a>
+        </div>
+    </footer>
+
     <script>
-        // --- COPIAR DESDE AQUÍ ---
+        const API_BASE = window.location.origin;
 
-// Función para enviar el formulario al pulsar ENTER
-document.getElementById('miModal').addEventListener('keydown', function(e) {
-    if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
-        e.preventDefault();
-        guardarFicha();
-    }
-});
-
-async function guardarFicha() {
-    const btn = document.getElementById('btn-guardar');
-    const data = {
-        matricula: document.getElementById('matricula').value.trim(),
-        cliente: document.getElementById('propietario').value.trim(),
-        whatsapp: document.getElementById('telefono').value.trim(),
-        notas: document.getElementById('notes').value.trim()
-    };
-
-    if(!data.matricula) return alert("La matrícula es obligatoria");
-
-    // Cambiamos el estado del botón visualmente
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ENVIANDO...';
-
-    try {
-        // Conexión directa con la ruta de tu app.py
-        const response = await fetch('/guardar_cliente', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-
-        if (response.ok) {
-            alert("✅ Guardado correctamente en la nube y la Raspberry.");
-            cerrarModal();
-            location.reload(); 
-        } else {
-            alert("❌ El servidor de la Raspberry (app.py) no ha respondido correctamente.");
+        function actualizarReloj() {
+            const ahora = new Date();
+            document.getElementById('reloj-maestro').textContent = ahora.toLocaleTimeString('es-ES', { hour12: false });
         }
-    } catch (e) {
-        // Este mensaje aparecerá si te olvidas de encender app.py
-        alert("❌ Fallo de comunicación: Asegúrate de que la Raspberry esté encendida y el proceso app.py activo.");
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-save"></i> GUARDAR Y AVISAR';
-    }
-}
-// --- HASTA AQUÍ ---
+        setInterval(actualizarReloj, 1000);
+        actualizarReloj();
+
+        document.getElementById('email-safe').innerHTML = 'info.automadrivepro@gmail.com';
+
+        function nuevaFicha() { 
+            document.getElementById('matricula').value = '';
+            document.getElementById('propietario').value = '';
+            document.getElementById('telefono').value = '';
+            document.getElementById('notes').value = '';
+            document.getElementById('miModal').style.display = 'block'; 
+        }
+        function cerrarModal() { document.getElementById('miModal').style.display = 'none'; }
+        
+        function abrirConfig() { 
+            document.getElementById('config-wa-num').value = localStorage.getItem('wa_num') || '';
+            document.getElementById('config-wa-token').value = localStorage.getItem('wa_token') || '';
+            document.getElementById('config-tg-token').value = localStorage.getItem('tg_token') || '';
+            document.getElementById('config-tg-chatid').value = localStorage.getItem('tg_chatid') || '';
+            document.getElementById('config-openai-key').value = localStorage.getItem('openai_key') || '';
+            document.getElementById('modalConfig').style.display = 'block'; 
+        }
+        function cerrarConfig() { document.getElementById('modalConfig').style.display = 'none'; }
+
+        async function guardarConfig() {
+            const config = {
+                wa_num: document.getElementById('config-wa-num').value,
+                wa_token: document.getElementById('config-wa-token').value,
+                tg_token: document.getElementById('config-tg-token').value,
+                tg_chatid: document.getElementById('config-tg-chatid').value,
+                openai_key: document.getElementById('config-openai-key').value
+            };
+            
+            localStorage.setItem('wa_num', config.wa_num);
+            localStorage.setItem('wa_token', config.wa_token);
+            localStorage.setItem('tg_token', config.tg_token);
+            localStorage.setItem('tg_chatid', config.tg_chatid);
+            localStorage.setItem('openai_key', config.openai_key);
+            
+            try {
+                const res = await fetch(`${API_BASE}/api/config`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+                if(res.ok) {
+                    alert("✅ Configuración guardada correctamente.");
+                    cerrarConfig();
+                } else {
+                    alert("⚠️ Error al guardar en servidor, pero se guardó localmente.");
+                    cerrarConfig();
+                }
+            } catch(e) {
+                alert("✅ Configuración guardada localmente.");
+                cerrarConfig();
+            }
+        }
+
+        async function buscarDesdeWidget() {
+            const query = document.getElementById('widget-search').value.trim();
+            if(!query) return;
+            
+            try {
+                const res = await fetch(`${API_BASE}/api/buscar?q=${encodeURIComponent(query)}`);
+                if(res.ok) {
+                    const data = await res.json();
+                    if(data.encontrado) {
+                        alert(`Expediente encontrado:\nMatrícula: ${data.matricula}\nCliente: ${data.cliente}\nEstado: ${data.estado || 'Activo'}`);
+                    } else {
+                        alert('Expediente no encontrado');
+                    }
+                }
+            } catch(e) {
+                alert('Error en la búsqueda');
+            }
+        }
+
+        async function enviarConsultaAI() {
+            const pregunta = document.getElementById('ai-admin-input').value.trim();
+            if(!pregunta) return;
+
+            const chatDiv = document.getElementById('ai-chat-admin');
+            chatDiv.innerHTML += `<div style="margin-bottom:5px;"><strong>Tú:</strong> ${pregunta}</div>`;
+            document.getElementById('ai-admin-input').value = '';
+            chatDiv.scrollTop = chatDiv.scrollHeight;
+
+            chatDiv.innerHTML += '<div class="loading">Pensando...</div>';
+            chatDiv.scrollTop = chatDiv.scrollHeight;
+
+            try {
+                const res = await fetch(`${API_BASE}/api/consulta-ia`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ pregunta })
+                });
+                
+                if(res.ok) {
+                    const data = await res.json();
+                    chatDiv.innerHTML = chatDiv.innerHTML.replace('<div class="loading">Pensando...</div>', '');
+                    chatDiv.innerHTML += `<div style="margin-bottom:5px; color:var(--primary);"><strong>IA:</strong> ${data.respuesta}</div>`;
+                } else {
+                    chatDiv.innerHTML = chatDiv.innerHTML.replace('<div class="loading">Pensando...</div>', '');
+                    chatDiv.innerHTML += '<div class="error">Error al procesar consulta</div>';
+                }
+            } catch(e) {
+                chatDiv.innerHTML = chatDiv.innerHTML.replace('<div class="loading">Pensando...</div>', '');
+                chatDiv.innerHTML += '<div class="error">Error de conexión</div>';
+            }
+            
+            chatDiv.scrollTop = chatDiv.scrollHeight;
+        }
+
+        function toggleActividad() {
+            document.getElementById('modalActividad').style.display = 'block';
+            cargarActividad();
+        }
+
+        function cerrarActividad() {
+            document.getElementById('modalActividad').style.display = 'none';
+        }
+
+        async function cargarActividad() {
+            try {
+                const res = await fetch(`${API_BASE}/api/actividad`);
+                if(res.ok) {
+                    const data = await res.json();
+                    let html = '<div style="display:flex; flex-direction:column; gap:10px;">';
+                    data.forEach(item => {
+                        html += `<div style="padding:10px; background:#0d1117; border-radius:5px; border-left:3px solid var(--primary);">
+                            <div style="font-weight:bold; color:var(--primary);">${item.tipo}</div>
+                            <div style="font-size:0.85rem; color:#94a3b8;">${item.descripcion}</div>
+                            <div style="font-size:0.7rem; color:#666; margin-top:5px;">${new Date(item.fecha).toLocaleString('es-ES')}</div>
+                        </div>`;
+                    });
+                    html += '</div>';
+                    document.getElementById('actividad-content').innerHTML = html || '<div style="text-align:center; color:#666;">No hay actividad reciente</div>';
+                }
+            } catch(e) {
+                document.getElementById('actividad-content').innerHTML = '<div class="error">Error al cargar actividad</div>';
+            }
+        }
+
+        function subirImagen(event) {
+            const file = event.target.files[0];
+            if(file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    document.getElementById('preview-img').src = e.target.result;
+                    document.getElementById('camera-preview').style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function cancelarImagen() {
+            document.getElementById('camera-input').value = '';
+            document.getElementById('camera-preview').style.display = 'none';
+        }
+
+        function pedidoRapido() {
+            const cantidad = prompt('Cantidad de litros de aceite Castrol Pro:');
+            if(cantidad) {
+                fetch(`${API_BASE}/api/pedido-rapido`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ producto: 'Castrol Pro', cantidad })
+                });
+                alert(`Pedido de ${cantidad}L registrado. Se enviará confirmación por WhatsApp.`);
+            }
+        }
+
+        function abrirTelegram() {
+            // Abrir Telegram Web directamente
+            window.open('https://web.telegram.org', '_blank');
+            
+            // Si hay token configurado, mostrar información adicional
+            const tgToken = localStorage.getItem('tg_token');
+            if(tgToken) {
+                console.log('Bot de Telegram configurado');
+            }
+        }
+
+        function abrirVideoFoso() {
+            // Abrir página del video foso en el backend
+            const API_BASE = window.location.origin;
+            window.open(`${API_BASE}/video-foso`, '_blank', 'width=1000,height=700');
+        }
+
+        async function checkAPIStatus() {
+            try {
+                const res = await fetch(`${API_BASE}/api/health`);
+                if(res.ok) {
+                    document.getElementById('status-api').innerHTML = '<span class="success">● API Conectada</span>';
+                } else {
+                    document.getElementById('status-api').innerHTML = '<span class="error">● API Desconectada</span>';
+                }
+            } catch(e) {
+                document.getElementById('status-api').innerHTML = '<span class="error">● API Desconectada</span>';
+            }
+        }
+
+        async function guardarFicha() {
+            const btn = document.getElementById('btn-guardar');
+            const data = {
+                matricula: document.getElementById('matricula').value.trim().toUpperCase(),
+                cliente: document.getElementById('propietario').value.trim(),
+                whatsapp: document.getElementById('telefono').value.trim(),
+                notas: document.getElementById('notes').value.trim(),
+                config_taller: {
+                    wa_num: localStorage.getItem('wa_num'),
+                    tg_token: localStorage.getItem('tg_token'),
+                    tg_chatid: localStorage.getItem('tg_chatid')
+                }
+            };
+
+            if(!data.matricula || data.matricula.length < 4) {
+                alert("⚠️ Por favor, introduce una matrícula válida.");
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> ENVIANDO...';
+
+            try {
+                const response = await fetch('/guardar_cliente', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    btn.style.background = "#2ecc71";
+                    btn.innerHTML = '✅ ENVIADO';
+                    setTimeout(() => { cerrarModal(); location.reload(); }, 1000);
+                } else { 
+                    throw new Error(); 
+                }
+            } catch (e) {
+                alert("❌ ERROR de conexión con el servidor.");
+                btn.disabled = false;
+                btn.style.background = "var(--primary)";
+                btn.innerHTML = '<i class="fas fa-save"></i> REINTENTAR';
+            }
+        }
+
+        function abrirPrivacidad() {
+            document.getElementById('modalPrivacidad').style.display = 'block';
+        }
+
+        function cerrarPrivacidad() {
+            document.getElementById('modalPrivacidad').style.display = 'none';
+        }
+
+        function abrirTerminos() {
+            alert('Términos de Uso:\n\n1. El sistema está destinado exclusivamente para uso profesional en talleres automotrices.\n2. El usuario es responsable de la veracidad de los datos introducidos.\n3. Se prohíbe el uso indebido del sistema.\n4. El proveedor no se hace responsable del uso incorrecto de las recomendaciones de la IA.\n\nPara más información, contacte con info.automadrivepro@gmail.com');
+        }
+
+        // Cerrar modales al hacer clic fuera
+        window.onclick = (e) => {
+            if(e.target.classList.contains('modal')) {
+                e.target.style.display = 'none';
+            }
+        };
+
+        // Inicialización
+        window.onload = () => {
+            checkAPIStatus();
+            setInterval(checkAPIStatus, 30000);
+        };
+    </script>
+</body>
+</html>

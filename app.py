@@ -1,172 +1,345 @@
 from flask import Flask, render_template, request, jsonify
+from flask_cors import CORS
 import json
-import os
-import threading
 import logging
 from datetime import datetime
+import openai
+from pathlib import Path
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+# =========================
+# LOGGING
+# =========================
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# =========================
+# APP
+# =========================
 app = Flask(__name__)
+CORS(app)
 
-DATA_FILE = 'clientes_local.json'
+# =========================
+# DIRECTORIOS / ARCHIVOS
+# =========================
+BASE_DIR = Path(__file__).parent
+DATA_DIR = BASE_DIR / "data"
+DATA_DIR.mkdir(exist_ok=True)
 
-@app.before_request
-def log_request():
-    logger.info(f"📥 {request.method} {request.path} | {request.headers.get('Host', 'unknown')}")
+RECORDINGS_DIR = DATA_DIR / "recordings"
+RECORDINGS_DIR.mkdir(exist_ok=True)
 
-@app.route('/')
-def home():
-    host = request.headers.get('Host', '').lower()
-    if 'automadrivepro.com' in host:
-        return render_template('admin.html')
-    return render_template('index.html')
+OCR_DIR = DATA_DIR / "ocr"
+OCR_DIR.mkdir(exist_ok=True)
 
-@app.route('/admin')
-def admin():
-    return render_template('admin.html')
+CONFIG_FILE = DATA_DIR / "config.json"
+FICHAS_FILE = DATA_DIR / "fichas.json"
+ACTIVIDAD_FILE = DATA_DIR / "actividad.json"
 
-@app.route('/ask', methods=['POST'])
-def ask():
+
+# =========================
+# UTILIDADES JSON
+# =========================
+def cargar_json(archivo: Path, default):
+    if archivo.exists():
+        try:
+            with open(archivo, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as e:
+            logger.warning(f"Error leyendo {archivo.name}: {e}")
+            return default
+    return default
+
+
+def guardar_json(archivo: Path, datos):
     try:
-        data = request.get_json()
-        if not data or 'message' not in data:
-            return jsonify({'error': 'Mensaje no proporcionado'}), 400
-            
-        msg = data.get('message', '').lower().strip()
-        logger.info(f"💬 {msg[:60]}")
-        
-        resp = None
-        
-        # HUMOS
-        if "humo negro" in msg:
-            resp = "⚫ HUMO NEGRO = Exceso combustible\n\n1. Filtro aire (15€)\n2. Inyectores (80-150€)\n3. Sensor MAF (10€)\n4. Sonda lambda (70-150€)"
-        elif "humo blanco" in msg:
-            resp = "⚪ HUMO BLANCO = Agua/refrigerante\n\nNORMAL: Vapor arranque frío\nGRAVE: Junta culata (600-1500€)\n🚨 Si persiste → PARA MOTOR"
-        elif "humo azul" in msg:
-            resp = "🔵 HUMO AZUL = Quema aceite\n\nRetenes: 400-900€\nTurbo: 700-2500€\nMotor: 2000€+"
-        
-        # PISTONES
-        elif "piston" in msg:
-            resp = "⚙️ PISTONES\n\nPieza que comprime la mezcla y transmite la explosión a la biela.\n\nPROBLEMAS:\n• Gripado → Sobrecalentamiento\n• Segmentos rotos → Pérdida compresión"
-        
-        # ACEITES
-        elif "aceite" in msg:
-            if any(x in msg for x in ["golf", "vw", "audi"]):
-                resp = "🛢️ ACEITE VAG\n\nTSI/TDI: 5W-30 (VW 504.00/507.00)\nCantidad: 3.5-5.5L\nCada: 15.000 km\n\nMarcas:\n✓ Castrol Edge (~50€)\n✓ Mobil 1 ESP (~48€)"
-            elif any(x in msg for x in ["moto", "yamaha", "honda"]):
-                resp = "🏍️ ACEITE MOTOS\n\nDeportivas: 10W-40/50 JASO MA2\nCada: 5.000-6.000 km\n\nMotul 7100 (16€/L)\nCastrol Power1"
-            else:
-                resp = "🛢️ ACEITE\n\n¿Qué vehículo?\nEj: 'Aceite BMW 320d 2018'"
-        
-        # FRENOS
-        elif "freno" in msg or "pastilla" in msg:
-            resp = "🛑 FRENOS\n\nPastillas: 40.000-60.000 km\nDiscos: 80.000-120.000 km\nLíquido: Cada 2 años\n\nCOSTE: 80-450€"
-        
-        # SUSPENSIÓN
-        elif "bieleta" in msg or "veleta" in msg:
-            resp = "🔧 BIELETAS\n\nSÍNTOMAS:\n• Ruido en baches\n• Golpeteo curvas\n\nCOSTE: 70-160€"
-        elif "amortiguador" in msg:
-            resp = "🔧 AMORTIGUADORES\n\nVida: 80.000-120.000 km\n\nTEST: Presiona y suelta\n>2 rebotes = Gastado\n\nCOSTE: 150-400€"
-        
-        # MOTOR
-        elif "temperatura" in msg or "sobrecalienta" in msg:
-            resp = "🌡️ SOBRECALENTAMIENTO\n\n1. Refrigerante bajo\n2. Termostato (40-80€)\n3. Bomba agua (150-350€)\n4. Junta culata (600-1500€)\n\n🚨 ROJO → PARA"
-        elif "bateria" in msg or "batería" in msg:
-            resp = "🔋 BATERÍA\n\nVida: 4-6 años\n\n12.6V = OK\n<12V = Cambiar\n\nCOSTE: 70-150€"
-        elif "bujia" in msg or "bujía" in msg:
-            resp = "⚡ BUJÍAS\n\nNormales: 30.000-50.000 km\nIridio: 100.000 km\n\nCOSTE: 40-120€"
-        elif "filtro" in msg:
-            resp = "🔍 FILTROS\n\nAIRE: 20.000 km (15€)\nACEITE: Cada cambio (8€)\nHABITÁCULO: 15.000 km (12€)"
-        
-        # TRANSMISIÓN
-        elif "embrague" in msg:
-            resp = "⚙️ EMBRAGUE\n\nVida: 100.000-200.000 km\n\nSÍNTOMAS:\n• Patina\n• Olor quemado\n\nCOSTE: 400-1200€"
-        elif "neumatico" in msg or "neumático" in msg:
-            resp = "🛞 NEUMÁTICOS\n\nVida: 40.000-60.000 km\n\n>3mm = OK\n<1.6mm = MULTA 200€\n\nCOSTE: 60-150€/ud"
-        elif "cadena moto" in msg:
-            resp = "⛓️ CADENA MOTO\n\nLimpiar: Cada 500 km\nEngrasar: Cada 500 km\nCambiar: 15.000-25.000 km\n\nCOSTE: 100-250€"
-        
-        # BÚSQUEDA WEB
-        else:
-            logger.info("🌐 Búsqueda web...")
-            try:
-                import requests
-                url = "https://api.duckduckgo.com/"
-                params = {'q': f"mecánica {msg}", 'format': 'json', 'no_html': 1}
-                res = requests.get(url, params=params, timeout=5)
-                web = res.json()
-                
-                abstract = web.get('AbstractText', '')
-                if abstract:
-                    resp = f"🌐 {abstract}\n\n💡 Fuente: Web"
-                else:
-                    resp = f"🤖 '{msg[:60]}...'\n\nSoy experto en:\n• Diagnóstico humos\n• Aceites (coches/motos)\n• Frenos, suspensión\n• Mantenimiento\n\n¿Más detalles?"
-            except:
-                resp = f"🤖 '{msg[:60]}...'\n\nSoy experto en mecánica.\n\n¿Puedes ser más específico?"
-        
-        return jsonify({'response': resp})
-        
+        with open(archivo, "w", encoding="utf-8") as f:
+            json.dump(datos, f, indent=2, ensure_ascii=False)
     except Exception as e:
-        logger.error(f"❌ {e}")
-        return jsonify({'error': str(e)}), 500
+        logger.error(f"Error guardando {archivo.name}: {e}")
 
-@app.route('/guardar_cliente', methods=['POST'])
+
+def registrar_actividad(tipo: str, descripcion: str):
+    actividades = cargar_json(ACTIVIDAD_FILE, [])
+    actividades.insert(0, {
+        "tipo": tipo,
+        "descripcion": descripcion,
+        "fecha": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    })
+    guardar_json(ACTIVIDAD_FILE, actividades[:100])
+
+
+def normalizar_matricula(s: str) -> str:
+    return (s or "").strip().upper()
+
+
+def normalizar_whatsapp(s: str) -> str:
+    # dejamos como string tal cual, pero sin espacios raros
+    return (s or "").strip().replace(" ", "")
+
+
+# =========================
+# SERVICIO IA (SYNC y estable)
+# =========================
+class ServicioIA:
+    def __init__(self):
+        self.openai_client = None
+        self._last_key = None
+
+    def inicializar(self, api_key: str | None):
+        if not api_key:
+            return
+        api_key = api_key.strip()
+        if not api_key:
+            return
+
+        # evita reinicializar si es la misma key
+        if self.openai_client and self._last_key == api_key:
+            return
+
+        try:
+            self.openai_client = openai.OpenAI(api_key=api_key)
+            self._last_key = api_key
+            logger.info("OpenAI inicializado correctamente.")
+        except Exception as e:
+            self.openai_client = None
+            logger.error(f"Error inicializando OpenAI: {e}")
+
+    def consultar(self, pregunta: str) -> str:
+        config = cargar_json(CONFIG_FILE, {})
+        api_key = (config.get("openai_key") or "").strip()
+
+        if api_key:
+            self.inicializar(api_key)
+
+        if self.openai_client:
+            try:
+                response = self.openai_client.chat.completions.create(
+                    model="gpt-4o",
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": (
+                                "Eres un experto mecánico de taller. "
+                                "Responde en español, breve, claro, por puntos, y directo. "
+                                "Si hay códigos OBD/DTC, explica significado, gravedad, causas y pruebas."
+                            )
+                        },
+                        {"role": "user", "content": pregunta}
+                    ],
+                    max_tokens=450
+                )
+                txt = response.choices[0].message.content or ""
+                return txt.strip() if txt else "Sin respuesta."
+            except Exception as e:
+                return f"Error IA: {str(e)}"
+
+        # fallback local
+        return (
+            "Respuesta local (sin OpenAI configurado):\n"
+            "- Revisa códigos OBD2 y síntomas.\n"
+            "- Comprueba fusibles, sensores, entradas de aire, fugas y valores en vivo.\n"
+            "- Si me das códigos DTC (P0xxx) te guío paso a paso."
+        )
+
+
+servicio_ia = ServicioIA()
+
+
+# =========================
+# RUTAS HTML
+# =========================
+@app.route("/")
+def landing():
+    # index.html (asistente público)
+    return render_template("index.html")
+
+
+@app.route("/panel")
+def panel():
+    # admin.html (dashboard técnico)
+    return render_template("admin.html", id_dispositivo="RASP-PRO-01")
+
+
+# =========================
+# API: ACTIVIDAD
+# =========================
+@app.route("/api/actividad")
+def api_actividad():
+    return jsonify(cargar_json(ACTIVIDAD_FILE, []))
+
+
+# =========================
+# API: CONSULTA IA
+# Compatible con index.html y admin.html
+# =========================
+@app.route("/api/consulta-ia", methods=["POST"])
+def consulta_ia():
+    data = request.get_json(silent=True) or {}
+    pregunta = (data.get("pregunta") or "").strip()
+
+    if not pregunta:
+        return jsonify({"error": "Pregunta vacía"}), 400
+
+    respuesta = servicio_ia.consultar(pregunta)
+
+    registrar_actividad("IA", f"Consulta: {pregunta[:80]}")
+    return jsonify({"respuesta": respuesta})
+
+
+# =========================
+# API: GUARDAR CLIENTE (UPSERT POR MATRÍCULA)
+# Compatible con admin.html (nuevaFicha)
+# =========================
+@app.route("/guardar_cliente", methods=["POST"])
 def guardar_cliente():
-    try:
-        cliente = request.get_json()
-        if not cliente or 'matricula' not in cliente:
-            return jsonify({'status': 'error'}), 400
-        
-        cliente['fecha'] = datetime.now().isoformat()
-        cliente['matricula'] = cliente['matricula'].upper().strip()
-        
-        data = []
-        if os.path.exists(DATA_FILE):
-            try:
-                with open(DATA_FILE, 'r', encoding='utf-8') as f:
-                    data = json.load(f)
-            except:
-                data = []
-        
-        data = [c for c in data if c.get('matricula') != cliente['matricula']]
-        data.append(cliente)
-        
-        if len(data) > 100:
-            data = sorted(data, key=lambda x: x.get('fecha', ''), reverse=True)[:100]
-        
-        with open(DATA_FILE, 'w', encoding='utf-8') as f:
-            json.dump(data, f, indent=4, ensure_ascii=False)
-        
-        return jsonify({'status': 'success', 'matricula': cliente['matricula']})
-        
-    except Exception as e:
-        return jsonify({'status': 'error', 'message': str(e)}), 500
+    data = request.get_json(silent=True) or {}
+    fichas = cargar_json(FICHAS_FILE, [])
 
-@app.route('/health')
-def health():
-    return jsonify({'status': 'healthy', 'timestamp': datetime.now().isoformat()}), 200
+    matricula = normalizar_matricula(data.get("matricula", ""))
+    if not matricula:
+        return jsonify({"status": "fail", "error": "Falta matrícula"}), 400
 
-@app.route('/ping')
-def ping():
-    return jsonify({'pong': True}), 200
+    cliente = (data.get("cliente") or "").strip()
+    whatsapp = normalizar_whatsapp(data.get("whatsapp", ""))
+    notas = (data.get("notas") or "").strip()
+    estado = (data.get("estado") or "En curso").strip()
 
-@app.errorhandler(404)
-def not_found(error):
-    return jsonify({'error': 'Ruta no encontrada'}), 404
+    # Buscar si ya existe por matrícula
+    existente = next((f for f in fichas if normalizar_matricula(f.get("matricula")) == matricula), None)
 
-@app.errorhandler(500)
-def internal_error(error):
-    return jsonify({'error': 'Error interno'}), 500
+    if existente:
+        # actualizar
+        existente["cliente"] = cliente
+        existente["whatsapp"] = whatsapp
+        existente["notas"] = notas
+        existente["estado"] = estado
+        existente["fecha"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        registrar_actividad("CLIENTE", f"Actualizado: {matricula} ({cliente})")
+    else:
+        # crear nuevo con id incremental
+        max_id = max([int(f.get("id", 0)) for f in fichas], default=0)
+        ficha = {
+            "id": max_id + 1,
+            "matricula": matricula,
+            "cliente": cliente,
+            "whatsapp": whatsapp,
+            "notas": notas,
+            "estado": estado,
+            "fecha": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        }
+        fichas.append(ficha)
+        registrar_actividad("CLIENTE", f"Nuevo ingreso: {matricula} ({cliente})")
 
-if __name__ == '__main__':
-    logger.info("=" * 70)
-    logger.info("🚀 AutoMaDrive Pro - Iniciando...")
-    logger.info("📍 Puerto: 5000")
-    logger.info("🌍 Routing:")
-    logger.info("   automadrivepro.com → admin.html")
-    logger.info("   automadrivepro.es → index.html (IA)")
-    logger.info("=" * 70)
-    
-    app.run(host='0.0.0.0', port=5000, threaded=True, debug=False)
+    guardar_json(FICHAS_FILE, fichas)
+    return jsonify({"status": "ok"})
+
+
+# =========================
+# API: BUSCAR EXPEDIENTE
+# ✅ Ahora devuelve whatsapp/telefono/notas/estado y sugerencias
+# Compatible con admin.html (buscarDesdeWidget + autollenado presupuesto)
+# =========================
+def generar_sugerencias_por_notas(notas: str):
+    n = (notas or "").lower()
+    sug = []
+
+    # heurística simple: si aparece la palabra en notas, sugiere líneas típicas
+    if "aceite" in n:
+        sug.append({"title": "Cambio de aceite + filtro", "qty": 1, "hours": 0.8, "parts": 55})
+    if "pastillas" in n or "freno" in n:
+        sug.append({"title": "Revisión sistema de frenos", "qty": 1, "hours": 0.6, "parts": 0})
+    if "bateria" in n or "batería" in n:
+        sug.append({"title": "Comprobación / sustitución batería", "qty": 1, "hours": 0.4, "parts": 95})
+    if "neumatic" in n or "neumát" in n or "rueda" in n:
+        sug.append({"title": "Revisión neumáticos + presión", "qty": 1, "hours": 0.4, "parts": 0})
+    if "obd" in n or "diagnos" in n or "testigo" in n:
+        sug.append({"title": "Diagnóstico OBD (lectura + informe)", "qty": 1, "hours": 0.4, "parts": 0})
+
+    return sug[:10]
+
+
+@app.route("/api/buscar")
+def buscar():
+    q = normalizar_matricula(request.args.get("q", ""))
+    if not q:
+        return jsonify({"encontrado": False, "error": "Falta parámetro q"}), 400
+
+    fichas = cargar_json(FICHAS_FILE, [])
+    ficha = next((f for f in fichas if normalizar_matricula(f.get("matricula")) == q), None)
+
+    if ficha:
+        cliente = ficha.get("cliente", "") or ""
+        whatsapp = ficha.get("whatsapp", "") or ""
+        notas = ficha.get("notas", "") or ""
+        estado = ficha.get("estado", "En curso") or "En curso"
+
+        registrar_actividad("BUSCAR", f"Encontrado: {q} ({cliente})")
+
+        return jsonify({
+            "encontrado": True,
+            "matricula": q,
+            "cliente": cliente,
+            "whatsapp": whatsapp,
+            "telefono": whatsapp,   # compatibilidad extra
+            "notas": notas,
+            "estado": estado,
+            "sugerencias": generar_sugerencias_por_notas(notas)
+        })
+
+    registrar_actividad("BUSCAR", f"No encontrado: {q}")
+    return jsonify({"encontrado": False})
+
+
+# =========================
+# API: AUDIO (CAJA NEGRA)
+# Compatible con admin.html (/api/upload-recording)
+# =========================
+@app.route("/api/upload-recording", methods=["POST"])
+def upload_recording():
+    if "audio" not in request.files:
+        return jsonify({"error": "No audio"}), 400
+
+    file = request.files["audio"]
+    filename = f"REC_{datetime.now().strftime('%Y%m%d_%H%M%S')}.webm"
+    file.save(RECORDINGS_DIR / filename)
+
+    registrar_actividad("SEGURIDAD", f"Audio grabado: {filename}")
+    return jsonify({"status": "ok", "file": filename})
+
+
+# =========================
+# API: OCR / IMAGEN (LANDING)
+# Compatible con index.html (/api/upload-ocr)
+# =========================
+@app.route("/api/upload-ocr", methods=["POST"])
+def upload_ocr():
+    if "image" not in request.files:
+        return jsonify({"error": "No image"}), 400
+
+    file = request.files["image"]
+    filename = f"OCR_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg"
+    file.save(OCR_DIR / filename)
+
+    registrar_actividad("OCR", f"Imagen subida: {filename}")
+    return jsonify({"result": "Imagen registrada en el historial.", "file": filename})
+
+
+# =========================
+# API: PEDIDO RÁPIDO
+# (si luego conectas al botón real)
+# =========================
+@app.route("/api/pedido-rapido")
+def pedido_rapido():
+    registrar_actividad("PEDIDO", "Solicitud Castrol Pro")
+    return jsonify({"url": "https://www.castrol.com"})
+
+
+# =========================
+# MAIN
+# =========================
+if __name__ == "__main__":
+    cfg = cargar_json(CONFIG_FILE, {})
+    if (cfg.get("openai_key") or "").strip():
+        servicio_ia.inicializar(cfg["openai_key"])
+
+    app.run(host="0.0.0.0", port=5000, debug=True)

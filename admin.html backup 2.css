@@ -1,0 +1,1472 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard T&eacute;cnico | AutomaDrive Pro</title>
+    <link rel="icon" href="/static/ia-logo.png" type="image/png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4ade80;
+            --bg: #0b0e14;
+            --card: #161b22;
+            --text: #e6edf3;
+            --btn-bg: #21262d;
+            --gold: #e3b341;
+            --accent: #00f2ff;
+        }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; padding: 15px; display: flex; flex-direction: column; min-height: 100vh; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--btn-bg); padding-bottom: 10px; }
+        .logo-admin { font-weight: 800; color: var(--primary); font-size: 1.5rem; display: flex; align-items: center; gap: 10px; }
+        .nav-buttons { display: flex; gap: 10px; align-items: center; }
+        .master-clock { background: #000; color: var(--primary); padding: 8px 15px; border-radius: 8px; border: 1px solid var(--primary); font-family: monospace; font-size: 1.2rem; }
+        .main-layout { display: grid; grid-template-columns: 350px 1fr 280px; gap: 15px; flex: 1; }
+        .btn-nav { background: var(--btn-bg); border: 1px solid #30363d; color: white; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 8px; }
+        .search-widget, .camera-section, .ai-assistant, .ad-box, .internal-comm { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid #30363d; margin-bottom: 15px; }
+
+        /* ✅ Más compacto: mejor encaje y aspecto pro */
+        .video-box, .map-box { width: 100%; height: 260px; background: #000; border-radius: 12px; border: 1px solid #30363d; margin-bottom: 15px; overflow: hidden; }
+
+        .modal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); }
+        .modal-content { background: var(--card); margin: 5% auto; padding: 25px; border-radius: 15px; width: 450px; border: 1px solid var(--primary); }
+        input, textarea { width: 100%; background: #0d1117; border: 1px solid #30363d; color: white; padding: 12px; border-radius: 8px; margin-bottom: 15px; box-sizing: border-box; }
+        footer { margin-top: auto; padding: 15px; border-top: 1px solid #333; text-align: center; font-size: 0.75rem; color: #666; }
+
+        /* ✅ extras mínimos */
+        .mini-btn {
+            background: #0d1117; border: 1px solid #30363d; color: #fff;
+            padding: 8px 10px; border-radius: 10px; cursor: pointer; font-weight: 800; font-size: 0.78rem;
+        }
+        .mini-btn:hover { border-color: var(--primary); }
+        .pill { display:inline-block; padding:4px 8px; border-radius: 999px; border: 1px solid #30363d; font-size:0.72rem; color:#94a3b8; }
+
+        /* ✅ Partners / Ads pro */
+        .partner-card {
+            background: linear-gradient(135deg, rgba(227,179,65,0.12), rgba(0,0,0,0.0));
+            border: 1px solid rgba(227,179,65,0.5);
+            border-radius: 12px;
+            padding: 12px;
+        }
+        .partner-title {
+            display:flex; align-items:center; justify-content:space-between; gap:10px;
+            margin: 0 0 8px 0;
+        }
+        .badge {
+            display:inline-flex; align-items:center; gap:6px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            border: 1px solid #30363d;
+            font-size: 0.72rem;
+            color: #94a3b8;
+            background: #0d1117;
+            white-space: nowrap;
+        }
+        .cta {
+            width:100%;
+            margin-top:10px;
+            background: var(--gold);
+            border:none;
+            padding:10px;
+            border-radius:10px;
+            font-weight:900;
+            cursor:pointer;
+            color:#000;
+        }
+        .partner-small {
+            font-size: 0.78rem;
+            color:#94a3b8;
+            line-height: 1.35;
+        }
+        .partner-rotator {
+            background:#0d1117;
+            border:1px solid #30363d;
+            border-radius: 10px;
+            padding: 10px;
+        }
+        .partner-row {
+            display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;
+        }
+        .partner-name { font-weight: 900; color: var(--primary); }
+        .partner-desc { font-size:0.78rem; color:#94a3b8; margin-top:6px; }
+
+        /* ✅ Suscripción pro */
+        .pay-btn {
+            width:100%;
+            border:none;
+            padding:10px;
+            border-radius:10px;
+            font-weight:900;
+            cursor:pointer;
+            margin-top:8px;
+        }
+        .pay-stripe { background: #635bff; color:#fff; }
+        .pay-paypal { background: #ffc439; color:#111; }
+        .pay-note { font-size:0.72rem; color:#94a3b8; margin-top:8px; line-height:1.35; }
+
+        /* ✅ Resultados diagnóstico dentro del panel */
+        .result-box {
+            margin-top:10px;
+            background:#0d1117;
+            border:1px solid #30363d;
+            border-radius:10px;
+            padding:10px;
+            max-height: 220px;
+            overflow:auto;
+            font-size:0.82rem;
+            color:#e6edf3;
+        }
+        .result-box b { color: var(--primary); }
+        .result-box .sec { margin:8px 0 6px; color:#94a3b8; font-weight:800; letter-spacing:0.02em; }
+        .muted { color:#94a3b8; }
+
+        /* ==========================================================
+           ✅ BLOQUE 1/3: BLOQUEO (PIN + PATRÓN) - estilo integrado
+           ========================================================== */
+        .lock-overlay{
+          position:fixed; inset:0; z-index:99999;
+          background:rgba(0,0,0,0.92);
+          display:none;
+          align-items:center; justify-content:center;
+          padding:16px;
+        }
+        .lock-card{
+          width:min(520px, 96vw);
+          background: var(--card);
+          border:1px solid #30363d;
+          border-radius: 16px;
+          padding:18px;
+          box-shadow: 0 0 0 1px rgba(74,222,128,0.15);
+        }
+        .lock-title{
+          display:flex; align-items:center; justify-content:space-between; gap:10px;
+          margin-bottom:12px;
+        }
+        .lock-title h3{
+          margin:0;
+          color: var(--primary);
+          font-size: 1.05rem;
+          letter-spacing:0.3px;
+        }
+        .lock-sub{
+          margin:0 0 12px 0;
+          font-size: 0.82rem;
+          color:#94a3b8;
+        }
+        .lock-row{
+          display:flex; gap:10px; flex-wrap:wrap;
+        }
+        .lock-row > div{ flex:1; min-width: 220px; }
+        .lock-mini{
+          font-size:0.78rem; color:#94a3b8; margin-bottom:8px;
+        }
+        .lock-input{
+          width:100%;
+          background:#0d1117; border:1px solid #30363d; color:#fff;
+          padding:12px; border-radius:10px; box-sizing:border-box;
+          margin-bottom: 0;
+        }
+        .lock-actions{
+          display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;
+        }
+        .lock-btn{
+          background: var(--btn-bg);
+          border:1px solid #30363d;
+          color:#fff;
+          padding:10px 12px;
+          border-radius:10px;
+          cursor:pointer;
+          font-weight:900;
+          font-size:0.82rem;
+        }
+        .lock-btn.primary{
+          background: var(--primary);
+          color:#000;
+          border:1px solid rgba(74,222,128,0.6);
+        }
+        .lock-btn.danger{
+          background:#e74c3c;
+          border:1px solid rgba(231,76,60,0.6);
+        }
+        .lock-hint{
+          margin-top:10px;
+          font-size:0.78rem;
+          color:#94a3b8;
+        }
+        .lock-error{
+          margin-top:10px;
+          font-size:0.82rem;
+          color:#ff6b6b;
+          display:none;
+        }
+        .pattern-wrap{
+          background:#0d1117;
+          border:1px solid #30363d;
+          border-radius:12px;
+          padding:12px;
+        }
+        .pattern-grid{
+          display:grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap:10px;
+          user-select:none;
+          touch-action:none;
+        }
+        .dot{
+          width:60px; height:60px;
+          max-width: 18vw; max-height: 18vw;
+          margin:auto;
+          border-radius:999px;
+          border:2px solid #30363d;
+          display:flex; align-items:center; justify-content:center;
+          position:relative;
+        }
+        .dot::after{
+          content:'';
+          width:14px; height:14px;
+          border-radius:999px;
+          background:#1f2937;
+        }
+        .dot.active{
+          border-color: var(--accent);
+          box-shadow: 0 0 0 3px rgba(0,242,255,0.12);
+        }
+        .dot.active::after{ background: var(--accent); }
+        .pattern-preview{
+          margin-top:10px;
+          font-family:monospace;
+          font-size:0.8rem;
+          color:#94a3b8;
+          word-break:break-all;
+        }
+        .small-pill{
+          display:inline-block;
+          padding:4px 8px;
+          border-radius:999px;
+          border:1px solid #30363d;
+          font-size:0.72rem;
+          color:#94a3b8;
+        }
+
+        /* ✅ Micro-mejora: enfoque visible (pro) */
+        button:focus, input:focus, textarea:focus { outline: 2px solid rgba(0,242,255,0.25); outline-offset: 2px; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="logo-admin">
+            <img src="/static/ia-logo.png" style="width:30px;">
+            <div><span>Automa</span>Drive Pro <small style="display:block; font-size: 0.4em; color: var(--gold);">PANEL DE CONTROL</small></div>
+        </div>
+        <div class="nav-buttons">
+            <button class="btn-nav" onclick="toggleActividad()"><i class="fas fa-history"></i> ACTIVIDAD</button>
+            <button class="btn-nav" onclick="nuevaFicha()"><i class="fas fa-plus"></i> NUEVO INGRESO</button>
+            <div class="master-clock" id="reloj-maestro">00:00:00</div>
+        </div>
+    </div>
+
+    <div class="main-layout">
+        <div class="left-col">
+            <div class="search-widget" style="background:white; color:#333;">
+                <div style="font-size:0.7em; font-weight:bold; margin-bottom:5px;">BUSCAR EXPEDIENTE</div>
+                <div style="display:flex; border:2px solid #000; border-radius:8px; overflow:hidden;">
+                    <div style="background:#003366; color:white; padding:10px; font-weight:bold;">E</div>
+                    <input type="text" id="widget-search" placeholder="0000 BBB" style="margin:0; border:none; color:#000; background:#fff; text-transform:uppercase; font-weight:bold;">
+                    <button onclick="buscarDesdeWidget()" style="background:#000; color:var(--primary); border:none; padding:10px; cursor:pointer;">GO</button>
+                </div>
+                <div id="search-status" style="margin-top:8px; font-size:0.8rem; color:#111; opacity:0.85;"></div>
+            </div>
+
+            <div class="camera-section">
+                <button class="btn-nav" style="width:100%; background: var(--primary); color: #000; justify-content:center;" onclick="document.getElementById('camera-input').click()">
+                    <i class="fas fa-camera"></i> CAPTURAR AVER&Iacute;A
+                </button>
+                <input type="file" id="camera-input" accept="image/*" capture="environment" style="display:none">
+                <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
+                    <span class="pill">Evidencia firmada (hash)</span>
+                    <span class="pill">Hora &amp; dispositivo</span>
+                    <span class="pill">Geo opcional</span>
+                </div>
+            </div>
+
+            <div class="ai-assistant">
+                <div style="color:var(--primary); font-weight:bold; margin-bottom:10px;"><i class="fas fa-robot"></i> CONSULTA T&Eacute;CNICA</div>
+                <div id="ai-chat-admin" style="height:110px; font-size:0.8rem; color:#4ade80; overflow-y:auto; margin-bottom:10px;">Listo...</div>
+                <input type="text" id="ai-admin-input" placeholder="Pregunta algo..." style="margin:0;">
+                <div id="ai-status" class="muted" style="margin-top:8px; font-size:0.72rem;">&nbsp;</div>
+            </div>
+
+            <!-- ✅ Diagnóstico guiado (resultado visible) -->
+            <div class="ai-assistant" style="border-color: var(--accent);">
+                <div style="color:var(--accent); font-weight:900; margin-bottom:10px;">
+                    <i class="fas fa-brain"></i> DIAGN&Oacute;STICO GUIADO
+                </div>
+
+                <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;">
+                    <button class="mini-btn" onclick="diagStart('no_arranca')">No arranca</button>
+                    <button class="mini-btn" onclick="diagStart('tirones')">Tirones</button>
+                    <button class="mini-btn" onclick="diagStart('vibracion')">Vibraci&oacute;n</button>
+                    <button class="mini-btn" onclick="diagStart('testigo_motor')">Testigo motor</button>
+                    <button class="mini-btn" onclick="diagStart('humo')">Humo</button>
+                    <button class="mini-btn" onclick="diagStart('frenos')">Frenos</button>
+                </div>
+
+                <div id="diag-box" style="background:#0d1117; border:1px solid #30363d; border-radius:10px; padding:10px;">
+                    <div style="font-size:0.78rem; color:#94a3b8; margin-bottom:8px;">Responde con los botones para obtener un protocolo.</div>
+                    <div id="diag-q" style="font-weight:900; margin-bottom:10px;">Selecciona un s&iacute;ntoma para empezar.</div>
+                    <div id="diag-actions" style="display:flex; gap:8px; flex-wrap:wrap;"></div>
+
+                    <!-- ✅ resultado dentro del panel -->
+                    <div id="diag-result" class="result-box" style="display:none;"></div>
+                </div>
+
+                <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
+                    <button class="mini-btn" onclick="diagReset()">Reset</button>
+                    <button class="mini-btn" onclick="diagCopyClient()">Copiar texto cliente</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="center-col">
+            <div class="video-box">
+                <iframe id="yt-frame" width="100%" height="100%" src="https://www.youtube.com/embed?listType=playlist&list=UUDt9sBJp3Mne9_8xmb_XoWQ&autoplay=1&mute=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+            </div>
+
+            <div class="map-box">
+                <iframe width="100%" height="100%" frameborder="0" src="https://maps.google.com/maps?q=Madrid&t=&z=13&ie=UTF8&iwloc=&output=embed"></iframe>
+            </div>
+        </div>
+
+        <div class="side-col">
+            <div class="ad-box">
+                <i class="fas fa-gas-pump" style="color:var(--gold);"></i> <b>CASTROL PRO</b>
+                <button onclick="pedidoRapido()" style="width:100%; margin-top:10px; background:var(--gold); border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;">PEDIDO R&Aacute;PIDO</button>
+            </div>
+
+            <!-- ✅ SUSCRIPCIÓN (Stripe/PayPal) -->
+            <div class="internal-comm" style="border-color:#635bff;">
+                <h4 style="color:#a5b4fc; margin-top:0;"><i class="fas fa-star"></i> SUSCRIPCI&Oacute;N</h4>
+                <div class="partner-small">
+                    Acceso premium al panel AutomaDrive Pro.<br>
+                    <span class="muted">Pago seguro. M&aacute;s adelante: Crypto + Hairy Wallet.</span>
+                </div>
+                <button class="pay-btn pay-stripe" onclick="goStripe()">
+                    <i class="fas fa-credit-card"></i> Suscribirme con Stripe
+                </button>
+                <button class="pay-btn pay-paypal" onclick="goPayPal()">
+                    <i class="fab fa-paypal"></i> Suscribirme con PayPal
+                </button>
+                <div class="pay-note">
+                    *Enlace de pago configurable. Cuando tengas el link real de checkout, lo pegamos y listo.
+                </div>
+            </div>
+
+            <!-- ✅ RACE fijo -->
+            <div class="internal-comm partner-card">
+                <div class="partner-title">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <i class="fas fa-flag-checkered" style="color:var(--gold);"></i>
+                        <div style="font-weight:900; color: var(--gold);">RACE</div>
+                    </div>
+                    <span class="badge"><i class="fas fa-crown" style="color:var(--gold);"></i> PARTNER OFICIAL</span>
+                </div>
+                <div class="partner-small">
+                    Asistencia en carretera 24/7 &middot; Cobertura nacional &middot; Soporte premium para taller.
+                    <div style="margin-top:6px; font-size:0.72rem; color:#94a3b8;">
+                        *Espacio reservado para colaboraci&oacute;n (logo oficial tras autorizaci&oacute;n).
+                    </div>
+                </div>
+                <button class="cta" onclick="window.open('https://www.race.es/', '_blank')">
+                    Ver cobertura / Propuesta
+                </button>
+            </div>
+
+            <!-- ✅ Rotador de marcas (solo motor) -->
+            <div class="internal-comm">
+                <h4 style="color:var(--gold); margin-top:0;"><i class="fas fa-bullhorn"></i> MARCAS EXCLUSIVAS</h4>
+
+                <div class="partner-rotator">
+                    <div class="partner-row">
+                        <div class="partner-name" id="partner-name">—</div>
+                        <span class="badge" id="partner-tag">Motor</span>
+                    </div>
+                    <div class="partner-desc" id="partner-desc">Cargando banner...</div>
+                    <button class="mini-btn" style="margin-top:10px; width:100%;" id="partner-cta" onclick="partnerClick()">Ver</button>
+                </div>
+
+                <div style="margin-top:8px; font-size:0.72rem; color:#94a3b8;">
+                    Rotaci&oacute;n autom&aacute;tica (productos/servicios del motor).
+                </div>
+            </div>
+
+            <!-- ✅ Historial inteligente -->
+            <div class="internal-comm" style="border-color: var(--primary);">
+                <h4 style="color:var(--primary); margin-top:0;">
+                    <i class="fas fa-rotate"></i> HISTORIAL INTELIGENTE
+                </h4>
+                <div style="font-size:0.78rem; color:#94a3b8; margin-bottom:10px;">
+                    Detecta patrones y crea recordatorios (ITV/aceite/frenos/distribuci&oacute;n) en base a actividad y notas.
+                </div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;">
+                    <button class="mini-btn" onclick="smartRefresh()">Actualizar</button>
+                    <button class="mini-btn" onclick="smartCopy()">Copiar</button>
+                </div>
+                <div id="smart-box" style="background:#0d1117; border:1px solid #30363d; border-radius:10px; padding:10px; font-size:0.8rem; color:#e6edf3; max-height:180px; overflow:auto;">
+                    <div style="color:#94a3b8;">Pulsa <b>Actualizar</b> para ver recomendaciones.</div>
+                </div>
+            </div>
+
+            <!-- ✅ Evidencias -->
+            <div class="internal-comm" style="border-color: var(--gold);">
+                <h4 style="color:var(--gold); margin-top:0;">
+                    <i class="fas fa-shield-halved"></i> EVIDENCIAS (ANTI-RECLAMACIONES)
+                </h4>
+                <div style="font-size:0.78rem; color:#94a3b8; margin-bottom:10px;">
+                    Cada captura queda registrada con sello de hora + hash (y geo opcional).
+                </div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;">
+                    <button class="mini-btn" onclick="eviCopy()">Copiar parte</button>
+                    <button class="mini-btn" onclick="eviClear()">Limpiar</button>
+                </div>
+                <div id="evi-box" style="background:#0d1117; border:1px solid #30363d; border-radius:10px; padding:10px; font-size:0.78rem; color:#e6edf3; max-height:180px; overflow:auto;">
+                    <div style="color:#94a3b8;">A&uacute;n no hay evidencias en esta sesi&oacute;n.</div>
+                </div>
+            </div>
+
+            <div class="internal-comm" style="border-color:var(--accent);">
+                <h4 style="color:var(--accent); margin-top:0;"><i class="fas fa-truck"></i> PROVEEDORES 24/7</h4>
+                <button onclick="window.open('https://www.distriauto.es')" style="width:100%; background:#fff; color:#000; border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer; margin-bottom:10px;">DISTRIAUTO</button>
+                <button onclick="window.open('https://www.autodoc.es')" style="width:100%; background:#ffdb00; color:#000; border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;">AUTODOC</button>
+            </div>
+
+            <div class="internal-comm">
+                <h4 style="color:var(--primary); margin-top:0;"><i class="fas fa-comments"></i> COMUNICACI&Oacute;N</h4>
+                <button onclick="abrirTelegram()" style="width:100%; background:#0088cc; color:white; border:none; padding:10px; border-radius:8px; margin-bottom:10px;"><i class="fab fa-telegram-plane"></i> TELEGRAM</button>
+                <button onclick="abrirVideoFoso()" style="width:100%; background:#28a745; color:white; border:none; padding:10px; border-radius:8px;"><i class="fas fa-video"></i> VIDEO FOSO</button>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        AutomaDrive Pro &copy; 2025 | Soporte: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="cca5a2aaa3e2adb9b8a3a1ada8bea5baa9bcbea38caba1ada5a0e2afa3a1">[email&#160;protected]</a> | ID: RASP-PRO-01 | <a href="#" style="color:#666;">Privacidad</a>
+    </footer>
+
+    <div id="miModal" class="modal">
+        <div class="modal-content">
+            <h2 style="color:var(--primary); margin-top:0;">EXPEDIENTE T&Eacute;CNICO</h2>
+            <label>MATR&Iacute;CULA</label>
+            <input type="text" id="matricula" placeholder="1234ABC" style="text-transform:uppercase; font-weight:bold;">
+            <label>CLIENTE</label>
+            <input type="text" id="propietario" placeholder="Nombre completo">
+            <label>WHATSAPP</label>
+            <input type="text" id="telefono" placeholder="+34 744456978">
+            <label>NOTAS</label>
+            <textarea id="notes" rows="4" placeholder="Diagn&oacute;stico..."></textarea>
+            <div style="display:flex; gap:10px;">
+                <button onclick="cerrarModal()" style="background:#e74c3c; color:white; border:none; padding:12px; border-radius:8px; flex:1; cursor:pointer; font-weight:bold;">CANCELAR</button>
+                <button id="btn-guardar" onclick="guardarFicha()" style="background:var(--primary); color:#000; border:none; padding:12px; border-radius:8px; flex:2; cursor:pointer; font-weight:bold;">
+                    <i class="fas fa-save"></i> GUARDAR Y AVISAR
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================================
+         ✅ BLOQUE 2/3: OVERLAY BLOQUEO (PIN + PATRÓN + EMAIL)
+         ========================================================== -->
+    <div id="lockOverlay" class="lock-overlay">
+      <div class="lock-card">
+        <div class="lock-title">
+          <h3><i class="fas fa-shield-halved"></i> Acceso protegido</h3>
+          <span class="small-pill" id="lockModePill">Doble verificación</span>
+        </div>
+
+        <p class="lock-sub">
+          Para usar el panel necesitas <b>email</b> (suscripción) y acceso seguro (<b>PIN + Patrón</b>).
+        </p>
+
+        <div class="lock-row">
+          <div>
+            <div class="lock-mini"><i class="fas fa-envelope"></i> Email del cliente (suscripción)</div>
+            <input id="lockEmail" class="lock-input" type="email" placeholder="taller@correo.com" autocomplete="email">
+            <div class="lock-hint">Este email se enviará en cada petición (gating).</div>
+          </div>
+
+          <div>
+            <div class="lock-mini"><i class="fas fa-key"></i> PIN (4-8 dígitos)</div>
+            <input id="lockPin" class="lock-input" type="password" inputmode="numeric" placeholder="••••" autocomplete="off" maxlength="8">
+            <div class="lock-hint">Si es la primera vez, se guardará como PIN del dispositivo.</div>
+          </div>
+        </div>
+
+        <div style="margin-top:12px;">
+          <div class="lock-mini"><i class="fas fa-hand-pointer"></i> Patrón (dibuja con el dedo o ratón)</div>
+          <div class="pattern-wrap">
+            <div id="patternGrid" class="pattern-grid">
+              <div class="dot" data-dot="1"></div>
+              <div class="dot" data-dot="2"></div>
+              <div class="dot" data-dot="3"></div>
+              <div class="dot" data-dot="4"></div>
+              <div class="dot" data-dot="5"></div>
+              <div class="dot" data-dot="6"></div>
+              <div class="dot" data-dot="7"></div>
+              <div class="dot" data-dot="8"></div>
+              <div class="dot" data-dot="9"></div>
+            </div>
+            <div class="pattern-preview" id="patternPreview">Patrón: (vacío)</div>
+          </div>
+        </div>
+
+        <div class="lock-error" id="lockError">Error</div>
+
+        <div class="lock-actions">
+          <button class="lock-btn primary" onclick="unlockNow()">
+            <i class="fas fa-unlock"></i> ENTRAR
+          </button>
+          <button class="lock-btn" onclick="resetLocalLock()">
+            <i class="fas fa-rotate-left"></i> Reset acceso
+          </button>
+          <button class="lock-btn danger" onclick="window.location.reload()">
+            <i class="fas fa-power-off"></i> Reiniciar
+          </button>
+        </div>
+
+        <div class="lock-hint">
+          ✅ Modo móvil: bloqueo recomendado. En PC también funciona si lo activas.
+        </div>
+      </div>
+    </div>
+
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+        /* ==========================================================
+           ✅ BLOQUE 3/3: BLINDAJE GATING + DOBLE SEGURIDAD (PIN + PATRÓN)
+           - apiFetch() añade email automáticamente (header + cookie + qs)
+           - bloqueo PIN+patrón antes de usar el panel
+           ========================================================== */
+        const ADP_EMAIL_KEY = "adp_customer_email_v1";
+        const ADP_PIN_HASH_KEY = "adp_pin_hash_v1";
+        const ADP_PATTERN_HASH_KEY = "adp_pattern_hash_v1";
+        const ADP_LOCK_ENABLED_KEY = "adp_lock_enabled_v1"; // "1" o "0"
+
+        // Nota: ya tienes const $ debajo, lo respetamos. Aquí usamos getEl para evitar colisión.
+        const getEl = (id) => document.getElementById(id);
+
+        function setCookie(name, value, days=30){
+          const d = new Date();
+          d.setTime(d.getTime() + (days*24*60*60*1000));
+          document.cookie = `${name}=${encodeURIComponent(value)}; expires=${d.toUTCString()}; path=/; SameSite=Lax`;
+        }
+
+        function getSavedEmail(){
+          return (localStorage.getItem(ADP_EMAIL_KEY) || "").trim();
+        }
+
+        function setSavedEmail(email){
+          localStorage.setItem(ADP_EMAIL_KEY, email);
+          setCookie("adp_email", email, 30);
+        }
+
+        async function sha256Hex(text){
+          const enc = new TextEncoder().encode(text);
+          const buf = await crypto.subtle.digest("SHA-256", enc);
+          return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,"0")).join("");
+        }
+
+        async function apiFetch(url, options = {}){
+          const email = getSavedEmail();
+          const opts = { ...options };
+          opts.headers = { ...(opts.headers || {}) };
+
+          if (email){
+            opts.headers["X-Customer-Email"] = email;
+            setCookie("adp_email", email, 30);
+          }
+
+          if ((!opts.method || opts.method.toUpperCase() === "GET") && email){
+            try{
+              const u = new URL(url, window.location.origin);
+              if (!u.searchParams.get("email")) u.searchParams.set("email", email);
+              url = u.pathname + u.search;
+            }catch(e){}
+          }
+
+          return fetch(url, opts);
+        }
+
+        let __patternCurrent = [];
+        let __patternIsDrawing = false;
+
+        function isMobileLike(){
+          return window.matchMedia("(max-width: 820px)").matches;
+        }
+
+        function lockEnabled(){
+          const v = localStorage.getItem(ADP_LOCK_ENABLED_KEY);
+          if (v === "0") return false;
+          if (v === "1") return true;
+          return isMobileLike(); // auto en móvil la primera vez
+        }
+
+        function showLock(){
+          const ov = getEl("lockOverlay");
+          if (!ov) return;
+          ov.style.display = "flex";
+
+          const email = getSavedEmail();
+          if (email) getEl("lockEmail").value = email;
+
+          __patternCurrent = [];
+          updatePatternPreview();
+          document.querySelectorAll(".dot").forEach(d=>d.classList.remove("active"));
+        }
+
+        function hideLock(){
+          const ov = getEl("lockOverlay");
+          if (!ov) return;
+          ov.style.display = "none";
+        }
+
+        function updatePatternPreview(){
+          const pv = getEl("patternPreview");
+          if (!pv) return;
+          pv.textContent = __patternCurrent.length ? `Patrón: ${__patternCurrent.join("-")}` : "Patrón: (vacío)";
+        }
+
+        function attachPatternEvents(){
+          const grid = getEl("patternGrid");
+          if (!grid) return;
+
+          const activateDot = (dotEl) => {
+            const n = dotEl?.dataset?.dot;
+            if (!n) return;
+            if (__patternCurrent.includes(n)) return;
+            __patternCurrent.push(n);
+            dotEl.classList.add("active");
+            updatePatternPreview();
+          };
+
+          const onDown = (e) => {
+            __patternIsDrawing = true;
+            __patternCurrent = [];
+            document.querySelectorAll(".dot").forEach(d=>d.classList.remove("active"));
+            updatePatternPreview();
+            const target = e.target.closest(".dot");
+            if (target) activateDot(target);
+          };
+
+          const onMove = (e) => {
+            if (!__patternIsDrawing) return;
+            const point = (e.touches && e.touches[0]) ? e.touches[0] : e;
+            const el = document.elementFromPoint(point.clientX, point.clientY);
+            const dot = el?.closest?.(".dot");
+            if (dot) activateDot(dot);
+          };
+
+          const onUp = () => { __patternIsDrawing = false; };
+
+          grid.addEventListener("mousedown", onDown);
+          window.addEventListener("mousemove", onMove);
+          window.addEventListener("mouseup", onUp);
+
+          grid.addEventListener("touchstart", onDown, {passive:true});
+          window.addEventListener("touchmove", onMove, {passive:true});
+          window.addEventListener("touchend", onUp, {passive:true});
+        }
+
+        function lockError(msg){
+          const el = getEl("lockError");
+          if (!el) return;
+          el.textContent = msg;
+          el.style.display = "block";
+          setTimeout(()=>{ el.style.display="none"; }, 2500);
+        }
+
+        async function unlockNow(){
+          const email = (getEl("lockEmail").value || "").trim().toLowerCase();
+          const pin = (getEl("lockPin").value || "").trim();
+          const pattern = __patternCurrent.join("");
+
+          if (!email || !email.includes("@")) return lockError("Introduce un email válido.");
+          if (pin.length < 4) return lockError("PIN mínimo 4 dígitos.");
+          if (pattern.length < 4) return lockError("Patrón mínimo 4 puntos.");
+
+          setSavedEmail(email);
+
+          const pinHash = await sha256Hex("PIN:" + pin);
+          const patHash = await sha256Hex("PAT:" + pattern);
+
+          const savedPin = localStorage.getItem(ADP_PIN_HASH_KEY);
+          const savedPat = localStorage.getItem(ADP_PATTERN_HASH_KEY);
+
+          if (!savedPin || !savedPat){
+            localStorage.setItem(ADP_PIN_HASH_KEY, pinHash);
+            localStorage.setItem(ADP_PATTERN_HASH_KEY, patHash);
+            localStorage.setItem(ADP_LOCK_ENABLED_KEY, "1");
+            hideLock();
+            return;
+          }
+
+          if (pinHash !== savedPin) return lockError("PIN incorrecto.");
+          if (patHash !== savedPat) return lockError("Patrón incorrecto.");
+
+          hideLock();
+        }
+
+        function resetLocalLock(){
+          if (!confirm("¿Resetear PIN, patrón y email guardados en este dispositivo?")) return;
+          localStorage.removeItem(ADP_EMAIL_KEY);
+          localStorage.removeItem(ADP_PIN_HASH_KEY);
+          localStorage.removeItem(ADP_PATTERN_HASH_KEY);
+          localStorage.removeItem(ADP_LOCK_ENABLED_KEY);
+          setCookie("adp_email", "", -1);
+          alert("✅ Reset hecho. Recarga la página.");
+        }
+
+        // INIT LOCK
+        document.addEventListener("DOMContentLoaded", ()=>{
+          attachPatternEvents();
+          if (lockEnabled()){
+            showLock();
+          }else{
+            const em = getSavedEmail();
+            if (em) setCookie("adp_email", em, 30);
+          }
+        });
+
+        // =========================================
+        // UTIL (tuya)
+        // =========================================
+        const $ = (id) => document.getElementById(id);
+        const EVI_KEY = "automadrive_evidencias_session_v1";
+        const VID_LAST_KEY = "automadrive_speedkar_last_video_v1";
+        let diagState = null;
+        let diagClientText = "";
+
+        // =========================================
+        // RELOJ
+        // =========================================
+        function startClock() {
+            const el = $('reloj-maestro');
+            if (!el) return;
+            const tick = () => {
+                const d = new Date();
+                const hh = String(d.getHours()).padStart(2,'0');
+                const mm = String(d.getMinutes()).padStart(2,'0');
+                const ss = String(d.getSeconds()).padStart(2,'0');
+                el.textContent = `${hh}:${mm}:${ss}`;
+            };
+            tick();
+            setInterval(tick, 1000);
+        }
+
+        // =========================================
+        // VIDEO SPEEDKAR99 (AUTO-UPDATE)
+        // =========================================
+        async function updateSpeedkarVideo() {
+            const frame = $('yt-frame');
+            if (!frame) return;
+
+            const channelId = "UCDt9sBJp3Mne9_8xmb_XoWQ";
+            const feedUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`;
+
+            try {
+                const res = await fetch(feedUrl, { cache: 'no-store' });
+                const xmlText = await res.text();
+                const doc = new DOMParser().parseFromString(xmlText, "text/xml");
+                const entries = Array.from(doc.getElementsByTagName("entry"));
+
+                const ids = entries
+                    .map(e => e.getElementsByTagName("yt:videoId")[0]?.textContent?.trim())
+                    .filter(Boolean);
+
+                if (!ids.length) throw new Error("No video ids");
+
+                const last = localStorage.getItem(VID_LAST_KEY) || "";
+                let pick = ids[0];
+                if (pick === last && ids[1]) pick = ids[1];
+
+                localStorage.setItem(VID_LAST_KEY, pick);
+                frame.src = `https://www.youtube.com/embed/${pick}?autoplay=1&mute=1&rel=0`;
+            } catch (e) {
+                frame.src = "https://www.youtube.com/embed?listType=playlist&list=UUDt9sBJp3Mne9_8xmb_XoWQ&index=0&autoplay=1&mute=1";
+            }
+        }
+
+        // =========================================
+        // SUSCRIPCIÓN
+        // =========================================
+        function goStripe() {
+            // placeholder; backend /subscribe debe redirigir al Checkout real
+            const stripeCheckoutUrl = "/subscribe?provider=stripe";
+            window.location.href = stripeCheckoutUrl;
+        }
+        function goPayPal() {
+            const paypalCheckoutUrl = "/subscribe?provider=paypal";
+            window.location.href = paypalCheckoutUrl;
+        }
+
+        // =========================================
+        // PARTNERS ROTATOR (solo motor)
+        // =========================================
+        const PARTNERS = [
+            { name: "BOSCH Car Service", tag:"Diagnóstico", desc:"Equipamiento y diagnosis profesional. Colaboración premium para talleres.", url:"https://www.boschcarservice.com/" },
+            { name: "ZF Aftermarket", tag:"Transmisión", desc:"Componentes premium de transmisión y suspensión. Calidad OEM.", url:"https://aftermarket.zf.com/" },
+            { name: "MOTUL", tag:"Lubricantes", desc:"Lubricantes de alto rendimiento. Ideal para fidelización y packs.", url:"https://www.motul.com/" },
+            { name: "BREMBO", tag:"Frenos", desc:"Frenos premium. Campañas de revisión y seguridad.", url:"https://www.brembo.com/" },
+            { name: "Michelin", tag:"Neumáticos", desc:"Neumáticos premium + campañas estacionales. Alto valor por ticket.", url:"https://www.michelin.es/" },
+            { name: "Liqui Moly", tag:"Aditivos", desc:"Aditivos y aceites premium. Packs recomendados por diagnosis.", url:"https://www.liqui-moly.com/" },
+        ];
+        const PARTNER_KEY = "automadrive_partner_rotator_v1";
+
+        function setPartner(p) {
+            $('partner-name').textContent = p.name;
+            $('partner-tag').textContent = p.tag;
+            $('partner-desc').textContent = p.desc;
+            $('partner-cta').textContent = "Ver " + p.name;
+            $('partner-cta').dataset.url = p.url;
+        }
+        function partnerClick() {
+            const btn = $('partner-cta');
+            const url = btn?.dataset?.url;
+            if (url) window.open(url, '_blank');
+        }
+        function rotatePartner() {
+            let idx = Number(localStorage.getItem(PARTNER_KEY) || "0");
+            if (!Number.isFinite(idx)) idx = 0;
+            idx = (idx + 1) % PARTNERS.length;
+            localStorage.setItem(PARTNER_KEY, String(idx));
+            setPartner(PARTNERS[idx]);
+        }
+
+        // =========================================
+        // BUSCADOR EXPEDIENTE (evita Not Found) ✅ usa apiFetch
+        // =========================================
+        async function buscarDesdeWidget() {
+            const input = $('widget-search');
+            const status = $('search-status');
+            if (!input) return;
+
+            const code = (input.value || '').trim().toUpperCase();
+            if (!code) { input.focus(); return; }
+
+            const url = `/buscar-expediente?codigo=${encodeURIComponent(code)}`;
+
+            if (status) status.textContent = `Buscando: ${code}...`;
+
+            try {
+                const res = await apiFetch(url, { method: 'GET', cache: 'no-store' });
+
+                if (res.ok) {
+                    window.location.href = url;
+                    return;
+                }
+
+                if (res.status === 404) {
+                    if (status) status.textContent = `No registrado: ${code}`;
+                    const ok = confirm(`❌ Vehículo/Matrícula "${code}" no registrado.\n\n¿Abrir nueva ficha?`);
+                    if (ok) {
+                        nuevaFicha();
+                        const m = $('matricula');
+                        if (m) m.value = code;
+                    }
+                    return;
+                }
+
+                if (status) status.textContent = `Error buscando (${res.status}).`;
+                alert(`❌ Error buscando expediente (${res.status}).`);
+            } catch (e) {
+                if (status) status.textContent = `Fallo de conexión.`;
+                alert('❌ Fallo de conexión buscando el expediente.');
+            }
+        }
+
+        function toggleActividad() { smartRefresh(); }
+
+        function nuevaFicha() {
+            const modal = $('miModal');
+            if (modal) {
+                modal.style.display = 'block';
+                $('matricula')?.focus();
+            }
+        }
+
+        function cerrarModal() {
+            const modal = $('miModal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        // ✅ FIX: tu botón "PEDIDO RÁPIDO" te da alert porque no hay backend.
+        // Ahora lo manda a un endpoint estándar (si no existe, te avisará bien).
+        async function pedidoRapido() {
+            // Puedes crear /pedido-rapido en app.py más tarde.
+            // De momento, abrimos proveedor o hacemos ping al backend si existe.
+            try {
+                const res = await apiFetch('/pedido-rapido', { method:'GET', cache:'no-store' });
+                if (res.ok) {
+                    const data = await res.json().catch(()=>({}));
+                    const url = data?.url;
+                    if (url) return window.open(url, '_blank');
+                    alert("✅ Pedido rápido listo (configura /pedido-rapido para devolver URL).");
+                    return;
+                }
+                // fallback
+                window.open('https://www.castrol.com/es_es/spain/home/products.html', '_blank');
+            } catch(e) {
+                window.open('https://www.castrol.com/es_es/spain/home/products.html', '_blank');
+            }
+        }
+
+        function abrirTelegram() { window.open('https://t.me/', '_blank'); }
+        function abrirVideoFoso() { window.open('https://meet.google.com/', '_blank'); }
+
+        // =========================================
+        // CONSULTA TÉCNICA (pro: timeout + gating + latencia) ✅ usa apiFetch
+        // =========================================
+        function addAdminMsg(text) {
+            const box = $('ai-chat-admin');
+            if (!box) return;
+            const line = document.createElement('div');
+            line.textContent = text;
+            box.appendChild(line);
+            box.scrollTop = box.scrollHeight;
+            return line;
+        }
+
+        async function enviarConsultaTecnica() {
+            const input = $('ai-admin-input');
+            const status = $('ai-status');
+            if (!input) return;
+
+            const mensaje = (input.value || '').trim();
+            if (!mensaje) return;
+
+            // Si no hay email, pedimos primero (evita "Procesando" eterno)
+            const email = getSavedEmail();
+            if (!email) {
+                showLock();
+                if (status) status.textContent = "Introduce email + PIN + patrón para activar el panel.";
+                return;
+            }
+
+            input.disabled = true;
+            if (status) status.textContent = "Procesando…";
+
+            addAdminMsg('🧑‍🔧 ' + mensaje);
+            input.value = '';
+
+            const placeholder = addAdminMsg('⌛ Procesando…');
+
+            const controller = new AbortController();
+            const timeoutMs = 6500;
+            const t = setTimeout(() => controller.abort(), timeoutMs);
+            const t0 = performance.now();
+
+            try {
+                const res = await apiFetch('/ask', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: mensaje }),
+                    signal: controller.signal
+                });
+
+                let data = {};
+                try { data = await res.json(); } catch(e) {}
+
+                const ms = Math.round(performance.now() - t0);
+
+                if (!res.ok) {
+                    placeholder.textContent = `❌ Error (${res.status}).`;
+                    if (status) status.textContent = `Error (${ms} ms)`;
+                    return;
+                }
+
+                const answer = (data.response || data.answer || "Sin respuesta");
+                placeholder.textContent = '🤖 ' + answer;
+                if (status) status.textContent = `Listo (${ms} ms)`;
+            } catch (e) {
+                if (e.name === "AbortError") {
+                    placeholder.textContent = "⚠️ Respuesta lenta. Reintenta (servidor /ask tardando).";
+                    if (status) status.textContent = "Lento";
+                } else {
+                    placeholder.textContent = "❌ Error de conexión.";
+                    if (status) status.textContent = "Sin conexión";
+                }
+            } finally {
+                clearTimeout(t);
+                input.disabled = false;
+                input.focus();
+            }
+        }
+
+        // =========================================
+        // DIAGNÓSTICO GUIADO (resultado visible) (tuya)
+        // =========================================
+        const DIAG = {
+            no_arranca: {
+                title: "NO ARRANCA",
+                steps: [
+                    { q: "¿Gira el motor de arranque?", a: ["Sí", "No"] },
+                    { q: "¿Hay testigo de inmovilizador/llave?", a: ["Sí", "No"] },
+                    { q: "¿Huele a gasolina o hay intento de encendido?", a: ["Sí", "No"] },
+                    { q: "¿La batería es antigua (>4 años) o floja?", a: ["Sí", "No"] },
+                ],
+                result: (ans) => {
+                    const causes = [], tests = [], parts = [];
+                    let risk = "Medio";
+                    if (ans[0] === "No") {
+                        causes.push("Batería descargada / bornes sulfatados", "Motor de arranque / relé", "Masa/Conexiones");
+                        tests.push("Medir voltaje reposo y arranque", "Revisar bornes/masa", "Test relé y señal al motor de arranque");
+                        parts.push("Batería", "Relé arranque", "Motor arranque (si procede)");
+                        risk = "Bajo-Medio";
+                    } else {
+                        if (ans[1] === "Sí") {
+                            causes.push("Inmovilizador / llave / antena", "Comunicación ECU");
+                            tests.push("Probar llave alternativa", "Diagnosis OBD (inmo)", "Revisar fusibles ECU");
+                            parts.push("Llave/Transponder", "Antena inmovilizador (posible)");
+                            risk = "Medio";
+                        } else {
+                            causes.push("Falta de chispa", "Falta de combustible", "Sensor cigüeñal/árbol");
+                            tests.push("Ver chispa", "Presión de combustible", "OBD: rpm en arranque");
+                            parts.push("Bujías/Bobinas", "Bomba combustible", "Sensor CKP/CMP");
+                            risk = "Medio";
+                        }
+                    }
+                    return { causes, tests, parts, eta: "45–90 min", risk };
+                }
+            },
+            tirones: {
+                title: "TIRONES",
+                steps: [
+                    { q: "¿Ocurre en frío?", a: ["Sí", "No"] },
+                    { q: "¿Ocurre al acelerar fuerte?", a: ["Sí", "No"] },
+                    { q: "¿Hay testigo motor?", a: ["Sí", "No"] },
+                    { q: "¿Es diésel?", a: ["Sí", "No"] },
+                ],
+                result: (ans) => {
+                    const causes = ["Encendido (bujías/bobinas)", "MAF/MAP", "EGR/admisión", "Combustible (filtro/bomba)"];
+                    if (ans[3] === "Sí") causes.unshift("DPF/EGR (diésel) / inyectores");
+                    const tests = ["Lectura OBD (misfires/trim)", "Revisar bujías/bobinas", "Revisar filtro aire/MAF", "Prueba presión combustible"];
+                    const parts = ["Bujías", "Bobina", "Filtro aire", "Filtro combustible"];
+                    const risk = (ans[2] === "Sí") ? "Medio-Alto" : "Medio";
+                    return { causes, tests, parts, eta: "30–75 min", risk };
+                }
+            },
+            vibracion: {
+                title: "VIBRACIÓN",
+                steps: [
+                    { q: "¿Vibra a cierta velocidad (80–120)?", a: ["Sí", "No"] },
+                    { q: "¿Vibra al frenar?", a: ["Sí", "No"] },
+                    { q: "¿Vibra en ralentí?", a: ["Sí", "No"] },
+                ],
+                result: (ans) => {
+                    const causes = [], tests = [], parts = [];
+                    if (ans[0] === "Sí") { causes.push("Equilibrado", "Llantas deformadas", "Holguras suspensión"); tests.push("Equilibrado + revisión llantas", "Revisión holguras tren delantero"); parts.push("Pesos equilibrado", "Silentblocks (si procede)"); }
+                    if (ans[1] === "Sí") { causes.push("Discos alabeados", "Pinza agarrotada"); tests.push("Medición discos", "Revisar pinzas/guías"); parts.push("Discos", "Pastillas"); }
+                    if (ans[2] === "Sí") { causes.push("Tacos motor", "Ralentí inestable"); tests.push("Revisión soportes", "OBD + admisión"); parts.push("Soportes motor"); }
+                    if (!causes.length) { causes.push("Revisión transmisión y apoyos"); tests.push("Prueba carretera + elevador"); }
+                    return { causes, tests, parts, eta: "45–90 min", risk: "Medio" };
+                }
+            },
+            testigo_motor: {
+                title: "TESTIGO MOTOR",
+                steps: [
+                    { q: "¿El coche pierde potencia?", a: ["Sí", "No"] },
+                    { q: "¿Tiembla el motor (fallo encendido)?", a: ["Sí", "No"] },
+                    { q: "¿Es diésel?", a: ["Sí", "No"] },
+                ],
+                result: (ans) => {
+                    const causes = ["Lectura OBD", "Sensor lambda/MAF", "EGR/admision", "Encendido/inyección"];
+                    if (ans[2] === "Sí") causes.unshift("DPF/EGR/Turbo (diésel)");
+                    const tests = ["Leer códigos y freeze frame", "Revisión sensores", "Prueba carretera"];
+                    const parts = ["Sensor (según código)", "Filtros", "Limpieza EGR (según caso)"];
+                    const risk = (ans[0] === "Sí" || ans[1] === "Sí") ? "Alto" : "Medio";
+                    return { causes, tests, parts, eta: "30–60 min", risk };
+                }
+            },
+            humo: {
+                title: "HUMO",
+                steps: [
+                    { q: "¿Color del humo?", a: ["Negro", "Blanco", "Azul"] },
+                    { q: "¿Aparece al acelerar?", a: ["Sí", "No"] },
+                    { q: "¿Consume refrigerante/aceite?", a: ["Sí", "No"] },
+                ],
+                result: (ans) => {
+                    const causes = [], tests = [], parts = [];
+                    let risk = "Medio";
+                    if (ans[0] === "Negro") { causes.push("Exceso combustible", "MAF/MAP", "Filtro aire"); tests.push("Revisar filtro aire", "Lectura trims", "Revisión inyección"); parts.push("Filtro aire", "Sensor MAF (si procede)"); }
+                    else if (ans[0] === "Blanco") { causes.push("Refrigerante en combustión (posible)", "Condensación (si leve)"); tests.push("Prueba CO en vaso expansión", "Presión circuito"); parts.push("Junta culata (si confirma)"); risk="Alto"; }
+                    else { causes.push("Quema de aceite", "Turbo", "Retenes/segmentos"); tests.push("Revisar admisión/intercooler", "Medir consumo", "Prueba compresión"); parts.push("Turbo (si confirma)", "Juntas"); risk="Medio-Alto"; }
+                    return { causes, tests, parts, eta: "45–120 min", risk };
+                }
+            },
+            frenos: {
+                title: "FRENOS",
+                steps: [
+                    { q: "¿Chirrido al frenar?", a: ["Sí", "No"] },
+                    { q: "¿Vibración al frenar?", a: ["Sí", "No"] },
+                    { q: "¿Pedal esponjoso?", a: ["Sí", "No"] },
+                ],
+                result: (ans) => {
+                    const causes = ["Desgaste pastillas", "Discos", "Líquido viejo/aire"];
+                    const tests = ["Inspección visual", "Medición discos", "Prueba de frenada"];
+                    const parts = ["Pastillas", "Discos", "Líquido DOT"];
+                    const risk = (ans[2] === "Sí") ? "Alto" : "Medio";
+                    return { causes, tests, parts, eta: "30–60 min", risk };
+                }
+            }
+        };
+
+        function diagStart(key) {
+            const flow = DIAG[key];
+            if (!flow) return;
+            diagState = { key, idx: 0, ans: [] };
+            diagClientText = "";
+            $('diag-result').style.display = "none";
+            $('diag-result').innerHTML = "";
+            renderDiagQuestion(flow);
+        }
+
+        function renderDiagQuestion(flow) {
+            const qEl = $('diag-q');
+            const aEl = $('diag-actions');
+            const rEl = $('diag-result');
+            if (!qEl || !aEl || !rEl) return;
+
+            const step = flow.steps[diagState.idx];
+            if (!step) {
+                const r = flow.result(diagState.ans);
+                const mat = (document.getElementById('matricula')?.value || document.getElementById('widget-search')?.value || '').trim().toUpperCase() || '—';
+
+                diagClientText = [
+                    `Vehículo: ${mat}`,
+                    `Síntoma: ${flow.title}`,
+                    ``,
+                    `Causas probables (Top):`,
+                    ...r.causes.slice(0,5).map(x => `- ${x}`),
+                    ``,
+                    `Pruebas rápidas (orden):`,
+                    ...r.tests.slice(0,5).map(x => `- ${x}`),
+                    ``,
+                    `Piezas candidatas:`,
+                    ...r.parts.slice(0,5).map(x => `- ${x}`),
+                    ``,
+                    `Tiempo estimado: ${r.eta}`,
+                    `Riesgo de circular: ${r.risk}`,
+                    ``,
+                    `Mensaje al cliente:`,
+                    `Hemos detectado indicios compatibles con "${flow.title}". Proponemos realizar las pruebas indicadas para confirmar el origen. ¿Autorizas continuar con el diagnóstico/reparación?`
+                ].join("\n");
+
+                qEl.textContent = "✅ Protocolo generado.";
+                aEl.innerHTML = "";
+
+                const li = (arr) => arr.slice(0,5).map(x => `<div>• ${x}</div>`).join("");
+                rEl.style.display = "block";
+                rEl.innerHTML = `
+                    <div><b>Vehículo:</b> ${mat} &nbsp; <span class="badge">Riesgo: ${r.risk}</span></div>
+                    <div class="sec">Causas probables</div>
+                    ${li(r.causes)}
+                    <div class="sec">Pruebas rápidas (orden)</div>
+                    ${li(r.tests)}
+                    <div class="sec">Piezas candidatas</div>
+                    ${li(r.parts)}
+                    <div class="sec">Tiempo estimado</div>
+                    <div>${r.eta}</div>
+                    <div class="sec">Mensaje al cliente</div>
+                    <div class="muted">Hemos detectado indicios compatibles con "<b>${flow.title}</b>". Proponemos realizar las pruebas indicadas para confirmar el origen. ¿Autorizas continuar con el diagnóstico/reparación?</div>
+                `;
+                return;
+            }
+
+            qEl.textContent = step.q;
+            aEl.innerHTML = '';
+            rEl.style.display = "none";
+            rEl.innerHTML = "";
+
+            step.a.forEach(opt => {
+                const b = document.createElement('button');
+                b.className = 'mini-btn';
+                b.textContent = opt;
+                b.onclick = () => {
+                    diagState.ans.push(opt);
+                    diagState.idx++;
+                    renderDiagQuestion(flow);
+                };
+                aEl.appendChild(b);
+            });
+        }
+
+        function diagReset() {
+            diagState = null;
+            diagClientText = "";
+            const qEl = $('diag-q');
+            const aEl = $('diag-actions');
+            const rEl = $('diag-result');
+            if (qEl) qEl.textContent = "Selecciona un s&iacute;ntoma para empezar.";
+            if (aEl) aEl.innerHTML = "";
+            if (rEl) { rEl.style.display = "none"; rEl.innerHTML = ""; }
+        }
+
+        async function diagCopyClient() {
+            if (!diagClientText) return alert("A&uacute;n no hay resultado. Completa el flujo.");
+            try {
+                await navigator.clipboard.writeText(diagClientText);
+                alert("✅ Texto copiado.");
+            } catch (e) {
+                alert("❌ No se pudo copiar.");
+            }
+        }
+
+        // =========================================
+        // EVIDENCIAS ✅ usa apiFetch en upload
+        // =========================================
+        function loadEvi() {
+            try { return JSON.parse(localStorage.getItem(EVI_KEY) || "[]"); } catch(e) { return []; }
+        }
+        function saveEvi(list) {
+            localStorage.setItem(EVI_KEY, JSON.stringify(list.slice(0, 50)));
+            renderEvi();
+        }
+        function renderEvi() {
+            const box = $('evi-box');
+            if (!box) return;
+            const list = loadEvi();
+            if (!list.length) {
+                box.innerHTML = `<div style="color:#94a3b8;">A&uacute;n no hay evidencias en esta sesi&oacute;n.</div>`;
+                return;
+            }
+            box.innerHTML = list.map(e => `
+                <div style="border-bottom:1px dashed #30363d; padding:8px 0;">
+                    <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+                        <div><b style="color:var(--gold);">EVID</b> ${(e.matricula||'').toUpperCase()}</div>
+                        <div style="color:#94a3b8;">${e.ts}</div>
+                    </div>
+                    <div style="color:#94a3b8; word-break:break-all;">hash: ${e.hash}</div>
+                    ${e.geo ? `<div style="color:#94a3b8;">geo: ${e.geo}</div>` : ``}
+                </div>
+            `).join("");
+        }
+
+        async function eviCopy() {
+            const list = loadEvi();
+            if (!list.length) return alert("No hay evidencias.");
+            const mat = ($('matricula')?.value || '').trim().toUpperCase();
+            const lines = [];
+            lines.push("PARTE DE EVIDENCIAS - AUTOMA DRIVE PRO");
+            lines.push("Fecha: " + new Date().toLocaleString("es-ES"));
+            if (mat) lines.push("Vehículo/Matrícula: " + mat);
+            lines.push("");
+            list.forEach((e, i) => {
+                lines.push(`#${i+1}  ${e.ts}  ${(e.matricula||'—')}`);
+                lines.push(`hash: ${e.hash}`);
+                if (e.geo) lines.push(`geo: ${e.geo}`);
+                lines.push("");
+            });
+            const text = lines.join("\n");
+            try {
+                await navigator.clipboard.writeText(text);
+                alert("✅ Parte copiada.");
+            } catch(e) {
+                alert("❌ No se pudo copiar.");
+            }
+        }
+
+        function eviClear() {
+            if (!confirm("¿Borrar evidencias de esta sesión?")) return;
+            saveEvi([]);
+        }
+
+        async function tryGeo() {
+            return new Promise((resolve) => {
+                if (!navigator.geolocation) return resolve(null);
+                navigator.geolocation.getCurrentPosition(
+                    (p) => resolve(`${p.coords.latitude.toFixed(6)},${p.coords.longitude.toFixed(6)}`),
+                    () => resolve(null),
+                    { enableHighAccuracy: false, timeout: 2500, maximumAge: 300000 }
+                );
+            });
+        }
+
+        // =========================================
+        // HISTORIAL INTELIGENTE ✅ usa apiFetch
+        // =========================================
+        function analyzeLogItems(items) {
+            const suggestions = [];
+            const push = (t) => suggestions.push(t);
+            const now = Date.now();
+
+            items.slice(0, 20).forEach((it) => {
+                const mat = (it.matricula || "—").toUpperCase();
+                const notas = (it.notas || "").toLowerCase();
+                const cliente = (it.cliente || "").trim();
+
+                let age = null;
+                if (it.fecha) {
+                    const t = Date.parse(it.fecha);
+                    if (!Number.isNaN(t)) age = Math.floor((now - t) / 86400000);
+                }
+
+                if (notas.includes("fuga")) push(`🛢️ ${mat}: posible fuga → seguimiento 48h (cliente: ${cliente || "—"}).`);
+                if (notas.includes("distrib") || notas.includes("correa")) push(`⛓️ ${mat}: distribución → confirmar km/fecha.`);
+                if (notas.includes("pastilla") || notas.includes("disco") || notas.includes("freno")) push(`🛑 ${mat}: frenos → medir espesor + líquido.`);
+                if (notas.includes("aceite")) push(`🧴 ${mat}: aceite → sugerir cambio + filtro.`);
+                if (notas.includes("bateria") || notas.includes("arranque")) push(`🔋 ${mat}: batería/arranque → prueba carga + alternador.`);
+                if (age !== null && age >= 20 && (cliente || "").length) push(`📞 ${mat}: hace ${age} días → contacto post-servicio (“¿todo OK?”).`);
+            });
+
+            if (!suggestions.length) suggestions.push("Sin alertas fuertes. Tip: usa palabras clave en NOTAS (fuga/aceite/frenos/distribución).");
+            return suggestions.slice(0, 12);
+        }
+
+        async function smartRefresh() {
+            const box = $('smart-box');
+            if (!box) return;
+            box.innerHTML = `<div style="color:#94a3b8;">Cargando actividad...</div>`;
+
+            try {
+                const res = await apiFetch('/logs', { cache: 'no-store' });
+                const data = await res.json();
+                const items = data?.items || data || [];
+                const sug = analyzeLogItems(Array.isArray(items) ? items : []);
+
+                box.innerHTML = sug.map(s => `<div style="border-bottom:1px dashed #30363d; padding:8px 0;">${s}</div>`).join("");
+            } catch (e) {
+                box.innerHTML = `<div style="color:#94a3b8;">No se pudo cargar /logs.</div>`;
+            }
+        }
+
+        async function smartCopy() {
+            const box = $('smart-box');
+            if (!box) return;
+            const text = box.innerText.trim();
+            if (!text) return;
+            try {
+                await navigator.clipboard.writeText(text);
+                alert("✅ Copiado.");
+            } catch(e) {
+                alert("❌ No se pudo copiar.");
+            }
+        }
+
+        // =========================================
+        // OCR / upload + evidencia local ✅ usa apiFetch
+        // =========================================
+        async function uploadEvidence(file) {
+            if (!file) return;
+
+            addAdminMsg('📸 Imagen capturada. Enviando...');
+            const geo = await tryGeo();
+            const mat = (($('matricula')?.value || $('widget-search')?.value) || '').trim().toUpperCase();
+
+            const formData = new FormData();
+            formData.append('image', file);
+            formData.append('matricula', mat || '');
+            if (geo) formData.append('geo', geo);
+
+            try {
+                const res = await apiFetch('/upload-ocr', { method: 'POST', body: formData });
+                let data = {};
+                try { data = await res.json(); } catch(err) {}
+
+                if (!res.ok) {
+                    addAdminMsg('❌ OCR error (' + res.status + ')');
+                    return;
+                }
+
+                addAdminMsg('✅ OCR: ' + (data.result || 'Procesada'));
+
+                const hash = data.hash || ('local-' + Date.now().toString(36));
+                const list = loadEvi();
+                list.unshift({
+                    ts: new Date().toLocaleString("es-ES"),
+                    hash,
+                    matricula: mat || '',
+                    geo: geo || null
+                });
+                saveEvi(list);
+
+            } catch (err) {
+                addAdminMsg('❌ Error enviando imagen');
+            } finally {
+                $('camera-input').value = '';
+            }
+        }
+
+        // =========================================
+        // GUARDAR FICHA ✅ usa apiFetch
+        // =========================================
+        document.getElementById('miModal').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+                e.preventDefault();
+                guardarFicha();
+            }
+        });
+
+        async function guardarFicha() {
+            const btn = document.getElementById('btn-guardar');
+            const data = {
+                matricula: document.getElementById('matricula').value.trim(),
+                cliente: document.getElementById('propietario').value.trim(),
+                whatsapp: document.getElementById('telefono').value.trim(),
+                notas: document.getElementById('notes').value.trim()
+            };
+
+            if(!data.matricula) return alert("La matr&iacute;cula es obligatoria");
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ENVIANDO...';
+
+            try {
+                const response = await apiFetch('/guardar_cliente', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    alert("✅ Guardado correctamente en la nube y la Raspberry.");
+                    cerrarModal();
+                    location.reload();
+                } else {
+                    alert("❌ El servidor de la Raspberry (app.py) no ha respondido correctamente.");
+                }
+            } catch (e) {
+                alert("❌ Fallo de comunicaci&oacute;n: Aseg&uacute;rate de que la Raspberry est&eacute; encendida y el proceso app.py activo.");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-save"></i> GUARDAR Y AVISAR';
+            }
+        }
+
+        // =========================================
+        // INIT
+        // =========================================
+        document.addEventListener('DOMContentLoaded', () => {
+            startClock();
+            renderEvi();
+            updateSpeedkarVideo();
+
+            const saved = Number(localStorage.getItem(PARTNER_KEY) || "0");
+            setPartner(PARTNERS[(Number.isFinite(saved) ? saved : 0) % PARTNERS.length]);
+            setInterval(rotatePartner, 20000);
+
+            $('ai-admin-input')?.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') enviarConsultaTecnica();
+            });
+
+            $('widget-search')?.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') buscarDesdeWidget();
+            });
+
+            $('camera-input')?.addEventListener('change', (e) => {
+                const file = e.target.files && e.target.files[0];
+                if (!file) return;
+                uploadEvidence(file);
+            });
+        });
+    </script>
+
+</body>
+</html>
