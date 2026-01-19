@@ -1,494 +1,306 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
- <meta charset="UTF-8">
- <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
- <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <title>AutomaDrive Pro | Asistente Técnico IA</title>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard T&eacute;cnico | AutomaDrive Pro</title>
+    <link rel="icon" href="/static/ia-logo.png" type="image/png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4ade80;
+            --bg: #0b0e14;
+            --card: #161b22;
+            --text: #e6edf3;
+            --btn-bg: #21262d;
+            --gold: #e3b341;
+            --accent: #00f2ff;
+        }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; padding: 15px; display: flex; flex-direction: column; min-height: 100vh; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--btn-bg); padding-bottom: 10px; }
+        .logo-admin { font-weight: 800; color: var(--primary); font-size: 1.5rem; display: flex; align-items: center; gap: 10px; }
+        .nav-buttons { display: flex; gap: 10px; align-items: center; }
+        .master-clock { background: #000; color: var(--primary); padding: 8px 15px; border-radius: 8px; border: 1px solid var(--primary); font-family: monospace; font-size: 1.2rem; }
+        .main-layout { display: grid; grid-template-columns: 350px 1fr 280px; gap: 15px; flex: 1; }
+        .btn-nav { background: var(--btn-bg); border: 1px solid #30363d; color: white; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 8px; }
+        .search-widget, .camera-section, .ai-assistant, .ad-box, .internal-comm { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid #30363d; margin-bottom: 15px; }
 
- <!-- ICONOS unificados -->
- <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
- <link rel="icon" type="image/png" sizes="512x512" href="{{ url_for('static', filename='automadrive-icon.png') }}">
- <link rel="apple-touch-icon" sizes="512x512" href="{{ url_for('static', filename='automadrive-icon.png') }}">
+        .video-box, .map-box { width: 100%; height: 260px; background: #000; border-radius: 12px; border: 1px solid #30363d; margin-bottom: 15px; overflow: hidden; }
 
- <link rel="stylesheet"
- href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+        .hero-box {
+            width: 100%; height: 260px; border-radius: 12px; border: 1px solid #30363d;
+            margin-bottom: 15px; overflow: hidden; background: #000; position: relative;
+        }
+        .hero-box img { width: 100%; height: 100%; object-fit: cover; display:block; filter: saturate(1.05) contrast(1.05); }
+        .hero-overlay { position:absolute; inset:0; background: linear-gradient(180deg, rgba(0,0,0,0.25), rgba(0,0,0,0.78)); pointer-events:none; }
+        .hero-caption { position:absolute; left:12px; bottom:12px; right:12px; display:flex; align-items:flex-end; justify-content:space-between; gap:10px; pointer-events:none; }
+        .hero-caption .t { font-weight:900; letter-spacing:0.3px; }
+        .hero-caption .s { font-size:0.78rem; color:#94a3b8; }
 
- <style>
- :root {
- --primary: #4ade80;
- --bg: #0b0e14; /* igual que admin */
- --card: #161b22; /* igual que admin */
- --text: #e6edf3; /* igual que admin */
- --accent: #30363d; /* borde admin */
- --btn-bg: #21262d; /* botones admin */
- --gold: #e3b341; /* dorado admin */
- --danger: #ff4444;
- --muted: #94a3b8;
- }
+        .brand-mini { width: 34px; height: 34px; border-radius: 10px; border: 1px solid #30363d; object-fit: cover; box-shadow: 0 0 0 2px rgba(0,242,255,0.10); }
 
- * { margin: 0; padding: 0; box-sizing: border-box; }
+        .modal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); }
+        .modal-content { background: var(--card); margin: 5% auto; padding: 25px; border-radius: 15px; width: 450px; border: 1px solid var(--primary); }
+        
+        .mini-btn { background: #0d1117; border: 1px solid #30363d; color: #fff; padding: 8px 10px; border-radius: 10px; cursor: pointer; font-weight: 800; font-size: 0.78rem; }
+        .pill { display:inline-block; padding:4px 8px; border-radius: 999px; border: 1px solid #30363d; font-size:0.72rem; color:#94a3b8; }
 
- body {
- font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
- background: radial-gradient(circle at top, #111827 0, #020617 45%, #000 100%);
- color: var(--text);
- min-height: 100vh;
- }
+        .lock-overlay{ position:fixed; inset:0; z-index:99999; background:rgba(0,0,0,0.92); display:none; align-items:center; justify-content:center; padding:16px; }
+        .lock-card{ width:min(520px, 96vw); background: var(--card); border:1px solid #30363d; border-radius: 16px; padding:18px; }
+        .pattern-grid{ display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; user-select:none; touch-action:none; }
+        .dot{ width:60px; height:60px; margin:auto; border-radius:999px; border:2px solid #30363d; display:flex; align-items:center; justify-content:center; position:relative; }
+        .dot::after{ content:''; width:14px; height:14px; border-radius:999px; background:#1f2937; }
+        .dot.active{ border-color: var(--accent); }
+        .dot.active::after{ background: var(--accent); }
 
- .page {
- display: flex;
- min-height: 100vh;
- }
-
- .left {
- flex: 1;
- padding: 2.5rem 3rem;
- display: flex;
- flex-direction: column;
- gap: 2rem;
- }
-
- .right {
- flex: 1;
- position: relative;
- overflow: hidden;
- padding: 2rem;
- display: flex;
- align-items: center;
- justify-content: center;
- }
-
- .badge {
- display: inline-flex;
- align-items: center;
- gap: .5rem;
- padding: .25rem .75rem;
- border-radius: 999px;
- background: rgba(34, 197, 94, 0.12);
- border: 1px solid rgba(74, 222, 128, 0.35);
- color: var(--primary);
- font-size: .75rem;
- font-weight: 600;
- width: fit-content;
- }
-
- .badge i {
- color: var(--gold);
- }
-
- .logo-row {
- display: flex;
- align-items: center;
- justify-content: space-between;
- gap: 1rem;
- }
-
- .logo-text {
- font-weight: 700;
- letter-spacing: .05em;
- color: var(--text);
- font-size: 1rem;
- }
-
- h1 {
- font-size: clamp(2.5rem, 3.4vw, 3.4rem);
- line-height: 1.05;
- letter-spacing: -.03em;
- }
-
- h1 span {
- background: linear-gradient(135deg, #4ade80, #22c55e, #a855f7);
- -webkit-background-clip: text;
- background-clip: text;
- color: transparent;
- }
-
- .subtitle {
- max-width: 32rem;
- color: var(--muted);
- font-size: .98rem;
- line-height: 1.7;
- }
-
- .points {
- display: flex;
- flex-wrap: wrap;
- gap: .75rem .75rem;
- margin-top: .75rem;
- }
-
- .pill {
- font-size: .8rem;
- padding: .35rem .7rem;
- border-radius: 999px;
- background: rgba(15, 23, 42, 0.9);
- border: 1px solid rgba(148, 163, 184, 0.4);
- color: #e2e8f0;
- display: inline-flex;
- align-items: center;
- gap: .4rem;
- }
-
- .pill i {
- color: var(--primary);
- font-size: .7rem;
- }
-
- .cta-row {
- display: flex;
- flex-wrap: wrap;
- gap: .75rem;
- margin-top: 1.5rem;
- }
-
- .btn-primary {
- background: linear-gradient(135deg, #22c55e, #16a34a);
- border: none;
- color: #0b1120;
- font-weight: 700;
- padding: .75rem 1.4rem;
- border-radius: .75rem;
- cursor: pointer;
- font-size: .9rem;
- display: inline-flex;
- align-items: center;
- gap: .5rem;
- box-shadow: 0 18px 45px rgba(34, 197, 94, 0.4);
- }
-
- .btn-secondary {
- background: rgba(15, 23, 42, 0.9);
- border: 1px solid rgba(148, 163, 184, 0.5);
- color: #e2e8f0;
- font-weight: 500;
- padding: .75rem 1.25rem;
- border-radius: .75rem;
- cursor: pointer;
- font-size: .9rem;
- display: inline-flex;
- align-items: center;
- gap: .5rem;
- }
-
- .credibility {
- display: flex;
- flex-wrap: wrap;
- gap: 1rem;
- align-items: center;
- margin-top: 2rem;
- }
-
- .stat {
- display: flex;
- flex-direction: column;
- font-size: .8rem;
- color: var(--muted);
- }
-
- .stat strong {
- font-size: 1.1rem;
- color: #e5e7eb;
- }
-
- .labels {
- display: flex;
- gap: .5rem;
- flex-wrap: wrap;
- font-size: .7rem;
- color: var(--muted);
- }
-
- .labels span {
- padding: .35rem .6rem;
- border-radius: 999px;
- border: 1px solid rgba(75, 85, 99, 0.9);
- background: rgba(15, 23, 42, 0.9);
- }
-
- /* Derecha: imagen/fondo */
- .hero-frame {
- position: relative;
- width: 100%;
- max-width: 560px;
- border-radius: 1.5rem;
- padding: 1px;
- background: linear-gradient(135deg, rgba(56, 189, 248, 0.7), rgba(251, 191, 36, 0.8), rgba(88, 28, 135, 0.8));
- box-shadow:
- 0 30px 80px rgba(15, 23, 42, 0.8),
- 0 0 120px rgba(56, 189, 248, 0.5),
- 0 0 160px rgba(251, 191, 36, 0.4);
- }
-
- .hero-inner {
- border-radius: 1.45rem;
- background: radial-gradient(circle at top, rgba(15, 23, 42, 0.9) 0, #020617 60%);
- padding: 1.5rem 1.75rem 1.75rem 1.75rem;
- position: relative;
- overflow: hidden;
- }
-
- .hero-tag {
- display: inline-flex;
- align-items: center;
- gap: .4rem;
- padding: .25rem .6rem;
- border-radius: 999px;
- background: rgba(15, 23, 42, 0.9);
- border: 1px solid rgba(148, 163, 184, 0.5);
- color: #e5e7eb;
- font-size: .75rem;
- margin-bottom: .75rem;
- }
-
- .hero-tag i {
- color: #22c55e;
- }
-
- .hero-image {
- position: relative;
- border-radius: 1.25rem;
- overflow: hidden;
- border: 1px solid rgba(148, 163, 184, 0.4);
- }
-
- .hero-image img {
- display: block;
- width: 100%;
- height: auto;
- }
-
- .hero-glow {
- position: absolute;
- inset: 0;
- background: radial-gradient(circle at 20% 0%, rgba(56, 189, 248, 0.25), transparent 55%),
- radial-gradient(circle at 80% 100%, rgba(251, 191, 36, 0.25), transparent 55%);
- mix-blend-mode: screen;
- pointer-events: none;
- }
-
- .hero-grid {
- position: absolute;
- inset: 0;
- background-image:
- linear-gradient(rgba(148, 163, 184, 0.15) 1px, transparent 1px),
- linear-gradient(90deg, rgba(148, 163, 184, 0.18) 1px, transparent 1px);
- background-size: 40px 40px;
- opacity: 0.18;
- pointer-events: none;
- }
-
- .hero-badge {
- position: absolute;
- bottom: 1.25rem;
- right: 1.25rem;
- padding: .5rem .85rem;
- border-radius: 999px;
- background: rgba(15, 23, 42, 0.95);
- border: 1px solid rgba(251, 191, 36, 0.7);
- color: #fef9c3;
- font-size: .75rem;
- display: inline-flex;
- align-items: center;
- gap: .4rem;
- }
-
- .hero-badge i {
- color: #fbbf24;
- }
-
- .hero-metric {
- position: absolute;
- top: 1.25rem;
- left: 1.25rem;
- padding: .4rem .75rem;
- border-radius: .9rem;
- background: rgba(15, 23, 42, 0.9);
- border: 1px solid rgba(52, 211, 153, 0.7);
- color: #bbf7d0;
- font-size: .75rem;
- display: inline-flex;
- align-items: center;
- gap: .35rem;
- }
-
- .hero-metric span {
- font-weight: 600;
- }
-
- .hero-metric small {
- color: #6ee7b7;
- font-size: .7rem;
- }
-
- .hero-footer {
- margin-top: 1.1rem;
- display: flex;
- justify-content: space-between;
- align-items: center;
- font-size: .75rem;
- color: var(--muted);
- }
-
- .hero-footer-logos {
- display: flex;
- gap: .25rem;
- align-items: center;
- }
-
- .hero-footer-logos span {
- width: 20px;
- height: 20px;
- border-radius: 999px;
- background: radial-gradient(circle at 30% 20%, #4ade80, #064e3b);
- border: 1px solid rgba(34, 197, 94, 0.6);
- }
-
- .hero-footer-logos span:nth-child(2) {
- background: radial-gradient(circle at 30% 20%, #38bdf8, #0f172a);
- border-color: rgba(56, 189, 248, 0.7);
- }
-
- .hero-footer-logos span:nth-child(3) {
- background: radial-gradient(circle at 30% 20%, #f97316, #7c2d12);
- border-color: rgba(251, 146, 60, 0.8);
- }
-
- .hero-footer-text strong {
- color: #e5e7eb;
- }
-
- @media (max-width: 880px) {
- .page {
- flex-direction: column;
- }
- .left {
- padding: 1.75rem 1.5rem 1.5rem 1.5rem;
- }
- .right {
- padding: 0 1.5rem 2rem 1.5rem;
- }
- }
- </style>
+        .msg-list{ background:#0d1117; border:1px solid #30363d; border-radius:10px; padding:10px; max-height:220px; overflow:auto; font-size:0.82rem; }
+        .msg-item{ padding:8px 0; border-bottom:1px dashed #30363d; }
+        .role-pill{ display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; border:1px solid #30363d; font-size:0.75rem; color:#94a3b8; cursor:pointer; }
+        .role-pill.active{ border-color: var(--primary); color: var(--primary); }
+        
+        button:focus, input:focus, textarea:focus { outline: 2px solid rgba(0,242,255,0.25); }
+    </style>
 </head>
 <body>
-<div class="page">
- <div class="left">
- <div class="logo-row">
- <div class="badge">
- <i class="fa-solid fa-robot"></i>
- IA experta para talleres
- </div>
- </div>
 
- <div>
- <p class="logo-text">AUTOMADRIVE PRO</p>
- <h1>
- El copiloto de IA<br>
- para tu <span>taller mecánico</span>
- </h1>
- </div>
+    <div class="header">
+        <div class="logo-admin">
+            <img src="/static/ia-logo.png" style="width:30px;">
+            <img class="brand-mini" src="/static/admin-mini.png" alt="AutomaDrive Pro mini">
+            <div>
+                <span>Automa</span>Drive Pro
+                <small style="display:block; font-size: 0.4em; color: var(--gold);">PANEL DE CONTROL</small>
+            </div>
+        </div>
+        <div class="nav-buttons">
+            <button class="btn-nav" onclick="toggleActividad()"><i class="fas fa-history"></i> ACTIVIDAD</button>
+            <button class="btn-nav" onclick="nuevaFicha()"><i class="fas fa-plus"></i> NUEVO INGRESO</button>
+            <div class="master-clock" id="reloj-maestro">00:00:00</div>
+        </div>
+    </div>
 
- <p class="subtitle">
- AutomaDrive Pro analiza incidencias, órdenes de trabajo y mensajes de clientes
- para ayudarte a diagnosticar, presupuestar y priorizar trabajos en tu taller.
- Todo con un asistente técnico que habla tu idioma.
- </p>
+    <div class="main-layout">
+        <div class="left-col">
+            <div class="search-widget" style="background:white; color:#333;">
+                <div style="font-size:0.7em; font-weight:bold; margin-bottom:5px;">BUSCAR EXPEDIENTE</div>
+                <div style="display:flex; border:2px solid #000; border-radius:8px; overflow:hidden;">
+                    <div style="background:#003366; color:white; padding:10px; font-weight:bold;">E</div>
+                    <input type="text" id="widget-search" placeholder="0000 BBB" style="margin:0; border:none; color:#000; background:#fff; text-transform:uppercase; font-weight:bold;">
+                    <button onclick="buscarDesdeWidget()" style="background:#000; color:var(--primary); border:none; padding:10px; cursor:pointer;">GO</button>
+                </div>
+            </div>
 
- <div class="points">
- <span class="pill">
- <i class="fa-solid fa-sparkles"></i>
- IA entrenada en casos reales
- </span>
- <span class="pill">
- <i class="fa-solid fa-car-on"></i>
- Órdenes de trabajo y revisiones
- </span>
- <span class="pill">
- <i class="fa-solid fa-comments"></i>
- Conversación natural con clientes
- </span>
- <span class="pill">
- <i class="fa-solid fa-gauge-high"></i>
- Mejor planificación del taller
- </span>
- </div>
+            <div class="camera-section">
+                <button class="btn-nav" style="width:100%; background: var(--primary); color: #000; justify-content:center;" onclick="document.getElementById('camera-input').click()">
+                    <i class="fas fa-camera"></i> CAPTURAR AVER&Iacute;A
+                </button>
+                <input type="file" id="camera-input" accept="image/*" capture="environment" style="display:none">
+            </div>
 
- <div class="cta-row">
- <!-- Ajusta href al endpoint real de tu app -->
- <a href="{{ url_for('admin') }}">
- <button class="btn-primary">
- <i class="fa-solid fa-wrench"></i>
- Ir al panel técnico
- </button>
- </a>
+            <div class="ai-assistant">
+                <div style="color:var(--primary); font-weight:bold; margin-bottom:10px;"><i class="fas fa-robot"></i> CONSULTA T&Eacute;CNICA</div>
+                <div id="ai-chat-admin" style="height:110px; font-size:0.8rem; color:#4ade80; overflow-y:auto; margin-bottom:10px;">Listo...</div>
+                <input type="text" id="ai-admin-input" placeholder="Pregunta algo..." style="margin:0;">
+            </div>
+        </div>
 
- <!-- Ajusta href si tienes una ruta de demo pública -->
- <a href="#demo">
- <button class="btn-secondary">
- <i class="fa-regular fa-circle-play"></i>
- Ver demo rápida
- </button>
- </a>
- </div>
+        <div class="center-col">
+            <div class="hero-box">
+                <img src="/static/admin-hero.png" alt="AutomaDrive Pro Hero">
+                <div class="hero-overlay"></div>
+                <div class="hero-caption">
+                    <div>
+                        <div class="t">AutomaDrive Pro</div>
+                        <div class="s">Gestión + Diagnóstico + Evidencias</div>
+                    </div>
+                    <div class="badge"><i class="fas fa-bolt" style="color:var(--accent);"></i> PRO</div>
+                </div>
+            </div>
 
- <div class="credibility">
- <div class="stat">
- <strong>+120</strong>
- Talleres probando AutomaDrive
- </div>
- <div class="stat">
- <strong>Hasta 35%</strong>
- más productividad por técnico
- </div>
- <div class="labels">
- <span>Datos en la nube</span>
- <span>Privacidad de cliente</span>
- <span>IA aplicada al día a día</span>
- </div>
- </div>
- </div>
+            <div class="map-box" style="background: var(--card); padding: 15px;">
+                <div style="font-weight:900; color: var(--accent); margin-bottom:10px;">
+                    <i class="fas fa-microchip"></i> IA OBD (C&oacute;digos DTC)
+                </div>
+                <div class="obd-row">
+                    <input id="obd-code" type="text" placeholder="P0300" maxlength="10">
+                    <button id="obd-btn" class="obd-btn" onclick="obdExplain()">Analizar</button>
+                </div>
+                <div id="obd-result" class="result-box" style="display:none;"></div>
+            </div>
+        </div>
 
- <div class="right">
- <div class="hero-frame">
- <div class="hero-inner">
- <div class="hero-tag">
- <i class="fa-solid fa-bolt"></i>
- Vista previa del asistente AutomaDrive Pro
- </div>
+        <div class="side-col">
+            <div class="internal-comm" style="border-color: var(--primary);">
+                <h4 style="color:var(--primary); margin-top:0;"><i class="fas fa-database"></i> DATOS TALLER</h4>
+                <div style="display:flex; gap:8px;">
+                    <button class="mini-btn" style="flex:1;" onclick="triggerImport()"><i class="fas fa-upload"></i> Importar</button>
+                    <button class="mini-btn" style="flex:1;" onclick="triggerExport()"><i class="fas fa-download"></i> Exportar</button>
+                </div>
+                <input type="file" id="import-file" style="display:none;" accept=".csv">
+            </div>
 
- <div class="hero-image">
- <!-- Sustituye la ruta por tu imagen real en /static -->
- <img src="{{ url_for('static', filename='automadrive-hero.png') }}" alt="AutomaDrive Pro">
- <div class="hero-grid"></div>
- <div class="hero-glow"></div>
+            <div class="internal-comm" style="border-color: var(--accent);">
+                <h4 style="color:var(--accent); margin-top:0;"><i class="fas fa-message"></i> CHAT INTERNO</h4>
+                <div style="display:flex; gap:8px; margin-bottom:10px;">
+                    <span class="role-pill" id="role-taller" onclick="setMsgRole('taller')">Taller</span>
+                    <span class="role-pill" id="role-oficina" onclick="setMsgRole('oficina')">Oficina</span>
+                </div>
+                <div id="msg-list" class="msg-list"></div>
+                <div class="msg-tools" style="margin-top:10px; display:flex; gap:5px;">
+                    <input id="msg-input" type="text" placeholder="Escribe..." style="margin:0; flex:1;">
+                    <button class="mini-btn" onclick="msgSend()"><i class="fas fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
 
- <div class="hero-metric">
- <i class="fa-solid fa-signal"></i>
- <span>Operativo 24/7</span>
- <small>Sin descansos, sin despistes</small>
- </div>
+    <div id="lockOverlay" class="lock-overlay">
+      <div class="lock-card">
+        <h3 style="color:var(--primary);"><i class="fas fa-lock"></i> Acceso Protegido</h3>
+        <input id="lockEmail" class="lock-input" type="email" placeholder="Email Propietario" style="width:100%; margin-bottom:10px;">
+        <input id="lockPin" class="lock-input" type="password" placeholder="PIN" maxlength="8" style="width:100%; margin-bottom:10px;">
+        <div class="pattern-wrap">
+            <div id="patternGrid" class="pattern-grid">
+                <div class="dot" data-dot="1"></div><div class="dot" data-dot="2"></div><div class="dot" data-dot="3"></div>
+                <div class="dot" data-dot="4"></div><div class="dot" data-dot="5"></div><div class="dot" data-dot="6"></div>
+                <div class="dot" data-dot="7"></div><div class="dot" data-dot="8"></div><div class="dot" data-dot="9"></div>
+            </div>
+        </div>
+        <div style="display:flex; gap:10px; margin-top:15px;">
+            <button class="btn-nav" style="background:var(--primary); color:black; flex:1;" onclick="unlockNow()">VALIDAR</button>
+            <button class="btn-nav" style="flex:1;" onclick="hideLock()">CERRAR</button>
+        </div>
+      </div>
+    </div>
 
- <div class="hero-badge">
- <i class="fa-solid fa-shield-halved"></i>
- Datos de cliente siempre cifrados
- </div>
- </div>
+    <script>
+        const $ = (id) => document.getElementById(id);
+        let __patternCurrent = [];
+        let __patternIsDrawing = false;
+        let __pendingAction = null;
 
- <div class="hero-footer">
- <div class="hero-footer-logos">
- <span></span>
- <span></span>
- <span></span>
- </div>
- <div class="hero-footer-text">
- AutomaDrive Pro ya está ayudando a <strong>talleres digitales</strong>
- a responder más rápido y con menos errores.
- </div>
- </div>
- </div>
- </div>
- </div>
-</div>
+        /* --- RELOJ --- */
+        function startClock() {
+            setInterval(() => {
+                $('reloj-maestro').textContent = new Date().toLocaleTimeString('es-ES');
+            }, 1000);
+        }
+
+        /* --- SEGURIDAD --- */
+        async function sha256Hex(text){
+            const enc = new TextEncoder().encode(text);
+            const buf = await crypto.subtle.digest("SHA-256", enc);
+            return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,"0")).join("");
+        }
+
+        function showLock(action) {
+            __pendingAction = action;
+            $('lockOverlay').style.display = "flex";
+        }
+        function hideLock() { $('lockOverlay').style.display = "none"; }
+
+        async function unlockNow() {
+            const email = $('lockEmail').value;
+            const pin = $('lockPin').value;
+            const pattern = __patternCurrent.join("");
+            
+            // Simulación de validación (en producción comparar con localStorage)
+            if(email && pin && pattern) {
+                localStorage.setItem("adp_customer_email_v1", email);
+                hideLock();
+                if(__pendingAction) __pendingAction();
+            } else { alert("Completa todos los campos de seguridad."); }
+        }
+
+        /* --- DATOS (IMPORT/EXPORT) --- */
+        function triggerImport() {
+            showLock(() => { $('import-file').click(); });
+        }
+
+        $('import-file').onchange = async (e) => {
+            const file = e.target.files[0];
+            const formData = new FormData();
+            formData.append('file', file);
+            const res = await fetch('/data/import', { method: 'POST', body: formData });
+            if(res.ok) alert("Importación Exitosa.");
+        };
+
+        async function triggerExport() {
+            showLock(async () => {
+                const res = await fetch('/data/export');
+                if(res.ok) {
+                    const blob = await res.blob();
+                    const a = document.createElement('a');
+                    a.href = window.URL.createObjectURL(blob);
+                    a.download = "taller_backup.csv";
+                    a.click();
+                }
+            });
+        }
+
+        /* --- CHAT --- */
+        function setMsgRole(role) {
+            localStorage.setItem("msg_role", role);
+            document.querySelectorAll(".role-pill").forEach(p => p.classList.remove("active"));
+            $(`role-${role}`).classList.add("active");
+        }
+
+        async function msgSend() {
+            const text = $('msg-input').value;
+            const from = localStorage.getItem("msg_role") || "taller";
+            await fetch('/msg/send', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ from, text })
+            });
+            $('msg-input').value = "";
+            msgFetch();
+        }
+
+        async function msgFetch() {
+            const res = await fetch('/msg/inbox');
+            const data = await res.json();
+            $('msg-list').innerHTML = data.map(m => `
+                <div class="msg-item">
+                    <b>${m.from}:</b> ${m.text} <small style="color:#666">${m.ts}</small>
+                </div>
+            `).join("");
+        }
+
+        /* --- OBD --- */
+        async function obdExplain() {
+            const code = $('obd-code').value;
+            const res = await fetch('/obd-ask', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ code })
+            });
+            const data = await res.json();
+            $('obd-result').style.display = "block";
+            $('obd-result').textContent = data.response;
+        }
+
+        /* --- PATTERN LOGIC --- */
+        function initPattern() {
+            const grid = $('patternGrid');
+            grid.addEventListener("mousedown", () => { __patternIsDrawing = true; __patternCurrent = []; document.querySelectorAll(".dot").forEach(d => d.classList.remove("active")); });
+            window.addEventListener("mouseup", () => __patternIsDrawing = false);
+            grid.addEventListener("mouseover", (e) => {
+                const dot = e.target.closest(".dot");
+                if(dot && __patternIsDrawing && !__patternCurrent.includes(dot.dataset.dot)) {
+                    __patternCurrent.push(dot.dataset.dot);
+                    dot.classList.add("active");
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            startClock();
+            initPattern();
+            setMsgRole('taller');
+            setInterval(msgFetch, 4000);
+        });
+    </script>
 </body>
 </html>

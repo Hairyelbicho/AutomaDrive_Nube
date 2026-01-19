@@ -1,0 +1,52 @@
+GUÍA PARA INSERTAR UN VIDEO EN EL "TOUR INTERACTIVO"
+
+Esta guía explica cómo modificar el archivo c:\AutomaDrive\templates\admin.html para insertar un video en el cuadro "Tour Interactivo AutomaDrive".
+
+PASO 1: LOCALIZAR EL CÓDIGO
+---------------------------------------------------------
+1. Abre el archivo: c:\AutomaDrive\templates\admin.html
+2. Busca la línea (aproximadamente 1836) que dice:
+   <!-- ✅ TOUR INTERACTIVO -->
+
+PASO 2: ELEGIR CÓMO INSERTARLO
+---------------------------------------------------------
+Tienes dos opciones principales: reemplazar la animación actual o añadir el video debajo.
+
+OPCIÓN A: REEMPLAZAR EL TOUR POR EL VIDEO (Recomendado)
+Esta opción elimina las diapositivas interactivas y pone el video en su lugar.
+
+1. Localiza el bloque que empieza con:
+   <div class="demo-container" id="demo-box" onclick="nextDemoSlide()">
+   (Línea 1846 aprox)
+2. Busca dónde termina ese bloque (el cierre </div> correspondiente, aprox línea 1895).
+3. BORRA todo ese contenido (desde el inicio del div hasta su cierre).
+4. PEGA en ese hueco UNO de los siguientes códigos:
+
+   >>> CÓDIGO PARA YOUTUBE:
+   <div style="width: 100%; height: 260px; border-radius: 10px; overflow: hidden; border: 1px solid #333;">
+       <iframe width="100%" height="100%" src="https://www.youtube.com/embed/TU_ID_AQUI?autoplay=1&mute=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+   </div>
+   (Importante: Cambia 'TU_ID_AQUI' por el ID del video, ej: dQw4w9WgXcQ)
+
+   >>> CÓDIGO PARA VIDEO LOCAL (MP4):
+   <div style="width: 100%; height: 260px; background: #000; border-radius: 10px; overflow: hidden; border: 1px solid #333;">
+       <video width="100%" height="100%" controls style="object-fit: cover;">
+           <source src="../static/tu_video.mp4" type="video/mp4">
+           Tu navegador no soporta video.
+       </video>
+   </div>
+   (Importante: Guarda tu archivo de video en la carpeta 'static' con el nombre 'tu_video.mp4' o edita la ruta).
+
+OPCIÓN B: MANTENER EL TOUR Y AÑADIR EL VIDEO DEBAJO
+1. No borres nada.
+2. Ve al final del bloque <div class="demo-container"...>...</div>.
+3. Justo debajo de ese cierre </div>, pega el código del video (ver arriba).
+4. El cuadro se hará más alto automáticamente para acomodar ambos elementos.
+
+PASO 3: GUARDAR Y PROBAR
+---------------------------------------------------------
+1. Guarda el archivo admin.html.
+2. Recarga tu página en el navegador.
+
+NOTA SOBRE 'app.py':
+Si al recargar no ves cambios, verifica que tu archivo 'app.py' esté cargando el archivo correcto (línea 137, render_template).
