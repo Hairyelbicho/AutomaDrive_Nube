@@ -134,7 +134,7 @@ def obd_ask():
 # =========================================
 @app.route('/')
 def index():
-    return render_template('admin.html2.html')
+    return render_template('admin.html')
 
 if __name__ == '__main__':
     init_db()
